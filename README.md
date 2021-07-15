@@ -24,7 +24,7 @@ Apache Spark Plugin to analyze Korea's address system
 - spark-submit
   - terminal에서 `spark-submit target/scala-2.12/sample-scala_2.12-0.1.jar README.md`
 
-### Spark-submit
+### Spark-submit 옵션
 ```
 ./bin/spark-submit \
   --class <main-class> \
