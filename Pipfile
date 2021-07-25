@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 pyspark = "*"
+mysql-connector-python = "*"
+pandas = "*"
 
 [dev-packages]
 
