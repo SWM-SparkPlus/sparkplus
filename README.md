@@ -8,6 +8,9 @@ Apache Spark Plugin to analyze Korea's address system
 - .pypirc: 패키지 업로드를 위한 설정
 - 추가: MANIFEST.in 등의 파일
 
+- dependecnies: start spark-session & logging
+- test: test spark-session 
+
 ## 패키지 빌드 및 업로드
 1. `setuptools`, `wheel` 설치
    - `pip install setuptools wheel`
