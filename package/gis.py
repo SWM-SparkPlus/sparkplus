@@ -1,81 +1,24 @@
-#!/usr/bin/env python
-# coding: utf-8
-
-# In[2]:
-
-
-import pandas as pd
-import geopandas as gpd
 from shapely.geometry import Point, Polygon, LineString
-import matplotlib.pyplot as plt
-import matplotlib
-import matplotlib.font_manager as fm
-from matplotlib import font_manager, rc
 from pyspark.sql import SparkSession
-from geospark.register import GeoSparkRegistrator
-from geospark.register import upload_jars
+import geopandas as gpd
 
-
-# In[3]:
-
-
-from pyproj import Transformer
 import numpy as np
 import pandas as pd
+import pyspark
+from pyspark.sql.functions import *
+from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType,DecimalType
+from pyspark.sql.functions import lit, pandas_udf, PandasUDFType
 
+def gis_init():
+	spark = SparkSession.builder.appName("SparkSession").getOrCreate()
+	shp = "/root/spark-plugin/resource/EMD_202101/TL_SCCO_EMD.shp"
+	korea = gpd.read_file(shp, encoding='euc-kr')
+	gdf = korea.to_crs(4326)
+	return spark, gdf
 
-# In[4]:
-
-
-korea_shp_file = "shp/dong/TL_SCCO_EMD.shp"
-
-
-# In[5]:
-
-
-korea = gpd.read_file(korea_shp_file, encoding='euc-kr')
-
-
-# In[6]:
-
-
-plt.rcParams["font.family"] = 'NanumGothic'
-
-
-# In[7]:
-
-
-korea_wgs = korea.to_crs(4326)
-
-
-# In[13]:
-
-
-geumgok = korea_wgs[korea_wgs.EMD_KOR_NM == "금곡동"]
-
-
-# In[14]:
-
-
-geumgok
-
-
-# In[17]:
-
-
-home_lat = 37.3
-home_lng = 127.1
-home = Point(home_lng, home_lat)
-
-
-# In[18]:
-
-
-geumgok.geometry.contains(home)
-
-
-# In[ ]:
-
-
-
-
+def coord_to_dong(spark, gdf, lng, lat):
+	addr = gdf[gdf.geometry.contains(Point(lng, lat)) == True]
+	addr_drop_geom = addr.drop(columns='geometry')
+	df = spark.createDataFrame(addr_drop_geom)
+	df = df.select(concat(df.EMD_CD, lit("00")).alias('EMD_CD'), 'EMD_ENG_NM', 'EMD_KOR_NM')
+	return df
