@@ -23,8 +23,20 @@ def coord_to_dong(spark, gdf, lng, lat):
 	df = df.select(concat(df.EMD_CD, lit("00")).alias('EMD_CD'), 'EMD_ENG_NM', 'EMD_KOR_NM')
 	return df
 
+def coord_to_dong(spark, gdf, spark_df, lng_colname, lat_colname):
+	p_df = spark_to_pandas(spark_df)
+	g_df = gpd.GeoDataFrame(p_df, geometry = gpd.points_from_xy(p_df[lng_colname], p_df[lat_colname]))
+	li = list()
+	for i in g_df.index:
+		for j in gdf.index:
+			if gdf.geometry[j].contains(g_df.geometry[i]):
+				li.append(gdf.EMD_CD[j])
+	g_df.insert(len(g_df.columns), "EMD_CD", li)
+	g_df = g_df.drop(columns="geometry")
+	return spark.createDataFrame(g_df)
+
 def spark_to_pandas(spark_df):
-	return spark_df.select("*").toPands()
+	return spark_df.select("*").toPandas()
 
 def pandas_to_geopandas(pandas_df):
 	return gpd.GeoDataFrame(pandas_df)
