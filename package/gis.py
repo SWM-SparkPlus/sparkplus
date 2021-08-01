@@ -25,4 +25,6 @@ def coord_to_dong(spark, gdf, lng, lat):
 
 def spark_to_pandas(spark_df):
 	return spark_df.select("*").toPands()
-	
+
+def pandas_to_geopandas(pandas_df):
+	return gpd.GeoDataFrame(pandas_df)
