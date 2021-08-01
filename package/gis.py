@@ -22,3 +22,7 @@ def coord_to_dong(spark, gdf, lng, lat):
 	df = spark.createDataFrame(addr_drop_geom)
 	df = df.select(concat(df.EMD_CD, lit("00")).alias('EMD_CD'), 'EMD_ENG_NM', 'EMD_KOR_NM')
 	return df
+
+def spark_to_pandas(spark_df):
+	return spark_df.select("*").toPands()
+	
