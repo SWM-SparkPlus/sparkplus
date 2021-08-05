@@ -15,16 +15,16 @@ def download_file(url):
     content = response.read()
 
 spark, *_ = start_spark()
+
 # test_spark = test_spark.read.csv('../train.csv', header=True, inferSchema=True).select(['SUBWAY_ID', 'STATN_ID', 'STATN_NM'])
 
 # Spark with GeoPandas
-sdf = geopandas_df_to_spark_for_points(spark, gdf)
-display(sdf)
+# sdf = geopandas_df_to_spark_for_points(spark, gdf)
+# display(sdf)
 # Spark with MySQL
-'''
-test_df = spark.read.format("jdbc").option("url", "jdbc:mysql://localhost:3306/test_db") \
-    .option("driver", "com.mysql.jdbc.Driver").option('dbtable', "Trains") \
+
+test_df = spark.read.format("jdbc").option("url", "jdbc:mysql://localhost:3306/sparkplus") \
+    .option("driver", "com.mysql.jdbc.Driver").option('dbtable', "jibun_address_daejeon") \
     .option("user", "root").option("password", "9315").load()
 
 test_df.show()
-'''
