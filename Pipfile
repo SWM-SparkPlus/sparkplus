@@ -7,6 +7,9 @@ name = "pypi"
 pyspark = "*"
 mysql-connector-python = "*"
 pandas = "*"
+geopandas = "*"
+matplotlib = "*"
+geospark = "*"
 
 [dev-packages]
 

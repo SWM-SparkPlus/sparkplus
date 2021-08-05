@@ -57,12 +57,12 @@ def start_spark(app_name='my_spark_app', master='local[*]', jar_packages=[],
 
     if not (flag_repl or flag_debug):
         # get Spark session factory
-        spark_logger.warn('without flag')
+        print('without flag')
         spark_builder = (
             SparkSession
             .builder
             .appName(app_name))
-        spark_builder.config("spark.jars", "/Users/hwan/dev/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jars")
+        spark_builder.config("spark.jars", "/Users/hwan/dev/mysql-connector-java-8.0.26/mysql-connector-java-8.0.26.jar")
     else:
         # get Spark session factory
         spark_builder = (

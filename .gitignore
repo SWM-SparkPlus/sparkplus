@@ -151,3 +151,4 @@ resource/*
 
 # test file
 package/test.py
+/shp
