@@ -26,7 +26,7 @@ sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
 spark = SparkSession.builder.appName("hello").getOrCreate()
 
 test_df = spark.read.format("jdbc").option("url", "jdbc:mysql://host.docker.internal:3306/sparkplus") \
-    .option("driver", "com.mysql.jdbc.Driver").option('dbtable', "jibun_address_daejeon") \
+    .option("driver", "com.mysql.cj.jdbc.Driver").option('dbtable', "jibun_address_daejeon") \
     .option("user", "root").option("password", "sparkplus").load()
 
 test_df.show()
