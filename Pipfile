@@ -10,6 +10,9 @@ pandas = "*"
 geopandas = "*"
 matplotlib = "*"
 geospark = "*"
+h3 = "*"
+geopy = "*"
+folium = "*"
 
 [dev-packages]
 

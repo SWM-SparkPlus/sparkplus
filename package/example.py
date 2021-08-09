@@ -1,5 +1,6 @@
 from shapely.geometry import Point, Polygon
 import sys
+import os
 sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
 import findspark
 findspark.init()
@@ -9,6 +10,10 @@ from pyspark.sql.types import StructField, StructType, StringType, LongType, Dou
 import geopandas as gpd
 import pandas as pd
 import gis
+
+sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from dependencies.spark import start_spark
 
 spark, gdf = gis.gis_init()
 # df = gis.coord_to_dong(spark, gdf, 127.043738, 37.503259)
@@ -21,7 +26,8 @@ mySchema = StructType([
 ])
 
 myRow = Row(127.73311, 37.88673)
-myRow1 = Row(127.73311, 37.88673)
+myRow1 = Row(127.83311, 37.98673)
 myDf = spark.createDataFrame([myRow, myRow1], mySchema)
 result = gis.coord_to_dong(spark, gdf, myDf, "X", "Y")
+
 result.show()

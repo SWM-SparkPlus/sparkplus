@@ -11,7 +11,7 @@ from pyspark.sql.functions import lit, pandas_udf, PandasUDFType
 
 def gis_init():
 	spark = SparkSession.builder.appName("SparkSession").getOrCreate()
-	shp = "/root/spark-plugin/resource/EMD_202101/TL_SCCO_EMD.shp"
+	shp = "/Users/hwan/project/spark-plus/spark-plugin/resource/EMD_202101"
 	korea = gpd.read_file(shp, encoding='euc-kr')
 	gdf = korea.to_crs(4326)
 	return spark, gdf
@@ -24,16 +24,22 @@ def coord_to_dong(spark, gdf, lng, lat):
 	return df
 
 def coord_to_dong(spark, gdf, spark_df, lng_colname, lat_colname):
+
 	p_df = spark_to_pandas(spark_df)
+	# geometry = gpd.points_from_xy(p_df['longitude'], p_df['latitude'])
+
 	g_df = gpd.GeoDataFrame(p_df, geometry = gpd.points_from_xy(p_df[lng_colname], p_df[lat_colname]))
+	# g_df = gpd.GeoDataFrame(p_df, geometry=geometry)
 	li = list()
 	for i in g_df.index:
 		for j in gdf.index:
 			if gdf.geometry[j].contains(g_df.geometry[i]):
 				li.append(gdf.EMD_CD[j])
 	g_df.insert(len(g_df.columns), "EMD_CD", li)
-	g_df = g_df.drop(columns="geometry")
-	return spark.createDataFrame(g_df)
+	# g_df = g_df.drop(columns="geometry")
+	g_df = spark.createDataFrame(g_df)
+	
+	return g_df
 
 def spark_to_pandas(spark_df):
 	return spark_df.select("*").toPandas()
