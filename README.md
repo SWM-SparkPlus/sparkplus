@@ -8,8 +8,26 @@ Apache Spark Plugin to analyze Korea's address system
 - .pypirc: 패키지 업로드를 위한 설정
 - 추가: MANIFEST.in 등의 파일
 
-- dependecnies: start spark-session & logging
-- test: test spark-session 
+### dependecnies
+- spark
+   - start_spark(app_name, master, jar_packages, files, spark_config)
+- logging
+   - Log4j(object: spark session)
+
+### jobs
+- etl_job
+- table_to_df
+   - create_df(spark, table)
+
+### package 
+- gis
+   - gis_init()
+   - coord_to_dong(spark, gdf, spark_df, lng_colname, lat_colname)
+
+### testjob
+
+### resource
+- EMD_202101
 
 ## 패키지 빌드 및 업로드
 1. `setuptools`, `wheel` 설치
