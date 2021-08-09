@@ -15,22 +15,14 @@ from dependencies.spark import start_spark
 def geopandas_df_to_spark_for_points(spark, gdf):
     gdf['lon'] = gdf['geometry'].x
     gdf['lat'] = gdf['geometry'].y
-    sdf = spark.createDataFrame(pd.DataFrame(gdf).drop(['geometry'], axis=1))
+    sdf = spark.createDataFrame(pd.DataFrame(gdf), axis=1)
     return sdf
 
 
 
-korea_shp_file = "../shp/TL_SCCO_LI.shp"
+korea_shp_file = "shp/TL_SCCO_LI.shp"
 
 gdf = gpd.read_file(korea_shp_file, encoding='euc-kr')
 
-print(gdf.columns)
-print(gdf.geom_type)
-print(gdf)
 
 gdf = gdf.to_crs(4326)
-
-print(gdf)
-print(type(gdf))
-print(gdf.columns)
-print(gdf.geom_type)

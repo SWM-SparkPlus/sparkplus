@@ -42,6 +42,10 @@ shp = "/Users/hwan/project/spark-plus/spark-plugin/resource/EMD_202101"
 korea = gpd.read_file(shp, encoding='euc-kr')
 gdf = korea.to_crs(4326)
 
+sdf = geopandas_df_to_spark_for_points(spark, gdf)
+sdf.show()
+print(sdf)
+
 # spark, gdf = gis.gis_init()
 # df = gis.coord_to_dong(spark, gdf, 127.043738, 37.503259)
 # df.printSchema()
