@@ -1,28 +1,19 @@
 from shapely.geometry import Point, Polygon
-<<<<<<< HEAD
-import sys
-import os
-sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
-import findspark
-findspark.init()
-=======
->>>>>>> 6f69a90e7f54247696ec69eaf5faddc30b1245a6
 from pyspark.sql import SparkSession
 from pyspark.sql import Row
 from pyspark.sql.types import StructField, StructType, StringType, LongType, DoubleType
 import geopandas as gpd
 import pandas as pd
 import mysql.connector
+import sys
+import os
 
-<<<<<<< HEAD
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from dependencies.spark import start_spark
+import gis
 
 spark, gdf = gis.gis_init()
-=======
-#sspark, gdf = gis.gis_init()
->>>>>>> 6f69a90e7f54247696ec69eaf5faddc30b1245a6
 # df = gis.coord_to_dong(spark, gdf, 127.043738, 37.503259)
 # df.printSchema()
 # df.show()
@@ -46,14 +37,6 @@ url = "jdbc:mysql://host.docker.internal:3306/sparkplus"
 user = "root"
 password = "sparkplus"
 
-<<<<<<< HEAD
-myRow = Row(127.73311, 37.88673)
-myRow1 = Row(127.83311, 37.98673)
-myDf = spark.createDataFrame([myRow, myRow1], mySchema)
-result = gis.coord_to_dong(spark, gdf, myDf, "X", "Y")
-
-result.show()
-=======
 spark = SparkSession.builder.appName("hello").getOrCreate()
 li = [
 	'additional_info_busan',
@@ -121,4 +104,3 @@ for table_name in li:
         .load()
     table_df_list.append(name)
 table_df_list[2].show()
->>>>>>> 6f69a90e7f54247696ec69eaf5faddc30b1245a6
