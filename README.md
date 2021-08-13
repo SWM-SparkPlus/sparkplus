@@ -36,11 +36,16 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
 
 ### GeomFromWKT
 - `GeomFromWKT(Wkt: string)`
-### GeomFromWKB
+### GeomFromWKB **
 - `GeomFromWKB(Wkb: string)`
 ### GeomFromGeoJSON
 - `GeomFromGeoJSON(GeoJson: string)`
+
 ### DfFromSHP
+
+### GeomFromJUSO
+
+### JusoContainsGeom
 
 ### Point
 - `Point(X: decimal, Y: decimal)`
@@ -50,7 +55,7 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
 - `PolygonFromText(text: string, Delimiter: char)`
 ### LineStringFromText
 - `LineStringFromText(text: string, Delimiter: char)`
-### PolygonFromEnvelope
+### PolygonFromEnvelope **
 - `PolygonFromEnvelope(MinX: decimal, MinY: decimal, MaxX: decimal, MinX: decimal)`
 
 ## 패키지 빌드 및 업로드
