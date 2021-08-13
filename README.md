@@ -4,7 +4,7 @@ Spark+는 대규모 공간 정보를 국내 주소체계(신주소/구주소)와
 
 Spark+는 Apache Spark와 MySQL을 지원합니다.
 
-## 프로젝트 구조
+## Structure
 - spark-plus: 패키지 폴더
 - setup.py: 패키지의 설정, 서문
 - .pypirc: 패키지 업로드를 위한 설정
@@ -31,6 +31,27 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
 
 ### resource
 - /EMD_202101: 법정동 정보를 담고 있는 shp 디렉토리입니다.
+
+## Constructor
+
+### GeomFromWKT
+- `GeomFromWKT(Wkt: string)`
+### GeomFromWKB
+- `GeomFromWKB(Wkb: string)`
+### GeomFromGeoJSON
+- `GeomFromGeoJSON(GeoJson: string)`
+### DfFromSHP
+
+### Point
+- `Point(X: decimal, Y: decimal)`
+### PorintFromText
+- `PointFromText(Text: string, Delimiter: char)`
+### PolygonFromText
+- `PolygonFromText(text: string, Delimiter: char)`
+### LineStringFromText
+- `LineStringFromText(text: string, Delimiter: char)`
+### PolygonFromEnvelope
+- `PolygonFromEnvelope(MinX: decimal, MinY: decimal, MaxX: decimal, MinX: decimal)`
 
 ## 패키지 빌드 및 업로드
 1. `setuptools`, `wheel` 설치
