@@ -9,12 +9,11 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType,DecimalType
 from pyspark.sql.functions import lit, pandas_udf, PandasUDFType
 
-def gis_init():
-	spark = SparkSession.builder.appName("SparkSession").getOrCreate()
-	shp = "/Users/hwan/project/spark-plus/spark-plugin/resource/EMD_202101"
+def gdf_init(spark, loc):
+	shp = loc
 	korea = gpd.read_file(shp, encoding='euc-kr')
 	gdf = korea.to_crs(4326)
-	return spark, gdf
+	return gdf
 
 def coord_to_dong(spark, gdf, lng, lat):
 	addr = gdf[gdf.geometry.contains(Point(lng, lat)) == True]
@@ -60,3 +59,11 @@ def db_table_to_df(spark, table):
 		.option("password", password)\
 		.load()
 	return df
+
+def gdf_to_spark(spark, gdf):
+	gdf['wkt'] = pd.Series(
+    map(lambda geom: str(geom.to_wkt()), gdf['geometry']),
+    index=gdf.index, dtype='str')
+	tmp = gdf.drop("geometry", axis=1)
+	sdf = spark.createDataFrame(tmp).cache(); del tmp
+	return sdf
