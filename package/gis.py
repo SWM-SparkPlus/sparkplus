@@ -9,9 +9,8 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType,DecimalType
 from pyspark.sql.functions import lit, pandas_udf, PandasUDFType
 
-def gdf_init(spark, loc):
-	shp = loc
-	korea = gpd.read_file(shp, encoding='euc-kr')
+def gdf_init(spark, shp_location):
+	korea = gpd.read_file(shp_location, encoding='euc-kr')
 	gdf = korea.to_crs(4326)
 	return gdf
 
@@ -60,10 +59,11 @@ def db_table_to_df(spark, table):
 		.load()
 	return df
 
-def gdf_to_spark(spark, gdf):
+def gdf_to_spark_wkt(spark, gdf):
 	gdf['wkt'] = pd.Series(
     map(lambda geom: str(geom.to_wkt()), gdf['geometry']),
     index=gdf.index, dtype='str')
 	tmp = gdf.drop("geometry", axis=1)
 	sdf = spark.createDataFrame(tmp).cache(); del tmp
 	return sdf
+
