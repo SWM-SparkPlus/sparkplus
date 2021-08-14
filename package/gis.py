@@ -71,7 +71,7 @@ def spark_to_gdf_wkt(spark, gdf, col_name):
 	gdf['wkt_to_geom'] = gpd.GeoSeries.from_wkt(gdf[col_name])
 	return gdf
 
-def table_init(spark):
+def load_table(spark):
 	table_list = [
 		'additional_info_busan',
 		'additional_info_chungbuk',
