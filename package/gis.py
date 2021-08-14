@@ -67,3 +67,6 @@ def gdf_to_spark_wkt(spark, gdf):
 	sdf = spark.createDataFrame(tmp).cache(); del tmp
 	return sdf
 
+def spark_to_gdf_wkt(spark, gdf, col_name):
+	gdf['wkt_to_geom'] = gpd.GeoSeries.from_wkt(gdf[col_name])
+	return gdf
