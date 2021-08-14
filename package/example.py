@@ -37,7 +37,7 @@ url = "jdbc:mysql://host.docker.internal:3306/sparkplus"
 user = "root"
 password = "sparkplus"
 
-spark = SparkSession.builder.appName("hello").getOrCreate()
+spark = SparkSession.builder.appName("Spark App").getOrCreate()
 li = [
 	'additional_info_busan',
 	'additional_info_chungbuk',

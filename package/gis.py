@@ -9,12 +9,10 @@ from pyspark.sql.functions import *
 from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType,DecimalType
 from pyspark.sql.functions import lit, pandas_udf, PandasUDFType
 
-def gis_init():
-	spark = SparkSession.builder.appName("SparkSession").getOrCreate()
-	shp = "/Users/hwan/project/spark-plus/spark-plugin/resource/EMD_202101"
-	korea = gpd.read_file(shp, encoding='euc-kr')
+def load_shp(spark, file_location):
+	korea = gpd.read_file(file_location, encoding='euc-kr')
 	gdf = korea.to_crs(4326)
-	return spark, gdf
+	return gdf
 
 def coord_to_dong(spark, gdf, lng, lat):
 	addr = gdf[gdf.geometry.contains(Point(lng, lat)) == True]
@@ -46,3 +44,90 @@ def spark_to_pandas(spark_df):
 
 def pandas_to_geopandas(pandas_df):
 	return gpd.GeoDataFrame(pandas_df)
+
+def db_table_to_df(spark, table):
+	driver = "com.mysql.cj.jdbc.Driver"
+	url = "jdbc:mysql://host.docker.internal:3306/sparkplus"
+	user = "root"
+	password = "sparkplus"
+	df = spark.read.format("jdbc")\
+		.option("driver", "com.mysql.cj.jdbc.Driver")\
+		.option("url", url)\
+		.option("dbtable", table)\
+		.option("user", user)\
+		.option("password", password)\
+		.load()
+	return df
+
+def gdf_to_spark_wkt(spark, gdf):
+	gdf['wkt'] = pd.Series(
+    map(lambda geom: str(geom.to_wkt()), gdf['geometry']),
+    index=gdf.index, dtype='str')
+	tmp = gdf.drop("geometry", axis=1)
+	sdf = spark.createDataFrame(tmp).cache(); del tmp
+	return sdf
+
+def spark_to_gdf_wkt(spark, gdf, col_name):
+	gdf['wkt_to_geom'] = gpd.GeoSeries.from_wkt(gdf[col_name])
+	return gdf
+
+def load_table(spark):
+	table_list = [
+		'additional_info_busan',
+		'additional_info_chungbuk',
+		'additional_info_chungnam',
+		'additional_info_daegu',
+		'additional_info_daejeon',
+		'additional_info_gangwon',
+		'additional_info_gwangju',
+		'additional_info_gyeongbuk',
+		'additional_info_gyeonggi',
+		'additional_info_gyeongnam',
+		'additional_info_incheon',
+		'additional_info_jeju',
+		'additional_info_jeonbuk',
+		'additional_info_jeonnam',
+		'additional_info_sejong',
+		'additional_info_seoul',
+		'additional_info_ulsan',
+		'jibun_address_busan',
+		'jibun_address_chungbuk',
+		'jibun_address_chungnam',
+		'jibun_address_daegu',
+		'jibun_address_daejeon',
+		'jibun_address_gangwon',
+		'jibun_address_gwangju',
+		'jibun_address_gyeongbuk',
+		'jibun_address_gyeonggi',
+		'jibun_address_gyeongnam',
+		'jibun_address_incheon',
+		'jibun_address_jeju',
+		'jibun_address_jeonbuk',
+		'jibun_address_jeonnam',
+		'jibun_address_sejong',
+		'jibun_address_seoul',
+		'jibun_address_ulsan',
+		'roadname_address_busan',
+		'roadname_address_chungbuk',
+		'roadname_address_chungnam',
+		'roadname_address_daegu',
+		'roadname_address_daejeon',
+		'roadname_address_gangwon',
+		'roadname_address_gwangju',
+		'roadname_address_gyeongbuk',
+		'roadname_address_gyeonggi',
+		'roadname_address_gyeongnam',
+		'roadname_address_incheon',
+		'roadname_address_jeju',
+		'roadname_address_jeonbuk',
+		'roadname_address_jeonnam',
+		'roadname_address_sejong',
+		'roadname_address_seoul',
+		'roadname_address_ulsan',
+		'roadname_code'
+	]
+
+	for table in table_list:
+		name = table + "_df"
+		globals()[name] = db_table_to_df(spark, table)
+	return globals()
