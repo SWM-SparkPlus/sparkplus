@@ -54,8 +54,8 @@ def db_table_to_df(spark, table):
 	password = "sparkplus"
 	df = spark.read.format("jdbc")\
 		.option("driver", "com.mysql.cj.jdbc.Driver")\
-		.option("url", url) \
-		.option("dbtable", table) \
+		.option("url", url)\
+		.option("dbtable", table)\
 		.option("user", user)\
 		.option("password", password)\
 		.load()
