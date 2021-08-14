@@ -46,3 +46,17 @@ def spark_to_pandas(spark_df):
 
 def pandas_to_geopandas(pandas_df):
 	return gpd.GeoDataFrame(pandas_df)
+
+def db_table_to_df(spark, table):
+	driver = "com.mysql.cj.jdbc.Driver"
+	url = "jdbc:mysql://host.docker.internal:3306/sparkplus"
+	user = "root"
+	password = "sparkplus"
+	df = spark.read.format("jdbc")\
+		.option("driver", "com.mysql.cj.jdbc.Driver")\
+		.option("url", url) \
+		.option("dbtable", table) \
+		.option("user", user)\
+		.option("password", password)\
+		.load()
+	return df
