@@ -6,8 +6,8 @@ import pandas as pd
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
 from dependencies.spark import start_spark
-from jobs.with_geopandas import geopandas_df_to_spark_for_points
 from jobs.table_to_df import create_df
+from package import gis
 
 table_list = [
 	'additional_info_busan',
@@ -66,13 +66,14 @@ table_list = [
 
 spark, *_ = start_spark()
 
-table_dict = {}
-
 for table in table_list:
     name = table + "_df"
     globals()[name] = create_df(spark, table)
 
+gdf = gis.load_shp(spark, "../resource/EMD_202101/TL_SCCO_EMD.shp")
+sdf_df, tmp = gis.gdf_to_spark_wkt(spark, gdf)
 
-roadname_code_df.show()
+df = pd.DataFrame(tmp)
 
-globals()['roadname_address_ulsan_df'].show()
+sdf_df.show()
+print(df)
