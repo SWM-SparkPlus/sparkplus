@@ -71,7 +71,16 @@ for table in table_list:
     globals()[name] = create_df(spark, table)
 
 gdf = gis.load_shp(spark, "../resource/EMD_202101/TL_SCCO_EMD.shp")
+gdf = gdf.loc[gdf['EMD_CD'].eq('42110101')]
+print(gdf)
+
+ax = gdf.plot(figsize=(15, 15), column='EMD_CD', cmap='RdBu')
+ax.axis('off')
+
+print(ax)
+
 sdf_df, tmp = gis.gdf_to_spark_wkt(spark, gdf)
+
 
 df = pd.DataFrame(tmp)
 
