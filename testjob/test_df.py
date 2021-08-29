@@ -79,10 +79,10 @@ ax.axis('off')
 
 print(ax)
 
-sdf_df, tmp = gis.gdf_to_spark_wkt(spark, gdf)
+sdf_df, df = gis.gdf_to_spark_wkt(spark, gdf)
 
 
-df = pd.DataFrame(tmp)
+# df = pd.DataFrame(tmp)
 
 sdf_df.show()
 print(df)

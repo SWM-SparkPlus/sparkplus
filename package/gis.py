@@ -62,12 +62,12 @@ def db_table_to_df(spark, table):
 def gdf_to_spark_wkt(spark, gdf):
 	gdf['wkt'] = pd.Series(
     map(lambda geom: str(geom.to_wkt()), gdf['geometry']),
-    index = gdf.index, dtype='str')
-	gdf_wkt = gdf.drop("geometry", axis=1)
-	# df = pd.DataFrame(tmp)
-	sdf = spark.createDataFrame(gdf_wkt).cache(); 
+    index=gdf.index, dtype='str')
+	tmp = gdf.drop("geometry", axis=1)
+	df = pd.DataFrame(tmp)
+	sdf = spark.createDataFrame(tmp).cache(); del tmp
 	
-	return sdf, gdf_wkt
+	return sdf, df
 
 def spark_to_gdf_wkt(spark, gdf, col_name):
 	gdf['wkt_to_geom'] = gpd.GeoSeries.from_wkt(gdf[col_name])
