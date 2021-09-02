@@ -101,10 +101,11 @@ gdf = gdf.to_crs(4326)
 hongdae_lat = 37.55743
 hongdae_lng = 126.92580
 
+additional_info_seoul_df.show()
 # result = coord_to_emd(spark, gdf, hongdae_lng, hongdae_lat)
 
 # result.show()
-
+"""
 mySchema = StructType([
         StructField('x', DoubleType(), True),
         StructField('y', DoubleType(), True)
@@ -113,8 +114,8 @@ myRow = Row(hongdae_lng, hongdae_lat)
 myDf = spark.createDataFrame([myRow], mySchema)
 
 h3_df = coord_to_h3(hongdae_lng, hongdae_lat, 10)
-print(h3_df)
 
 jibun_df = coord_to_jibun(spark, gdf, jibun_address_seoul_df, hongdae_lng, hongdae_lat)
 
 roadname_df = coord_to_roadname(spark, gdf, jibun_address_seoul_df, roadname_address_seoul_df, roadname_code_df, hongdae_lng, hongdae_lat)
+"""

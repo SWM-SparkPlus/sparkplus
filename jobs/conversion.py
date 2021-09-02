@@ -51,8 +51,8 @@ def coord_to_h3(lng, lat, h3_level):
 def coord_to_jibun(spark, gdf, table_df, lng, lat):
     emd_df = coord_to_emd(spark, gdf, lng, lat).toPandas()
     emd_cd = emd_df.iloc[0]['EMD_CD'] + '00'
-
     jibun_df = table_df[table_df['bupjungdong_code'] == emd_cd].toPandas()
+    print(jibun_df)
     return jibun_df
 
 def coord_to_roadname(spark, gdf, table_jibun, table_roadname, tabel_roadname_code, lng, lat):
