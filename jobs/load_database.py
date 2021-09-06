@@ -64,7 +64,7 @@ tables = [
 
 
 def load_tables(spark, url, user, password, driver="com.mysql.cj.jdbc.Driver", opt=0):
-    if opt == 0:
+    if opt == 'all':
         result = spark.read.format('jdbc') \
                                 .option('driver', driver) \
                                 .option('url', url) \
