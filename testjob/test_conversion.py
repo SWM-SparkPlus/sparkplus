@@ -16,7 +16,10 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from dependencies.spark import start_spark
 from jobs.table_to_df import create_df
 from package import gis
-from jobs.conversion import coord_df_to_emd, coord_to_emd, coord_to_h3, coord_to_jibun, coord_to_roadname
+from jobs.conversion import join_with_emd, coord_to_h3, coord_to_jibun, coord_to_roadname
+
+from pyspark.sql.types import StringType
+from pyspark.sql.functions import col, pandas_udf
 
 table_list = [
 	'additional_info_busan',
@@ -75,25 +78,14 @@ table_list = [
 
 driver = "com.mysql.cj.jdbc.Driver"
 url = "jdbc:mysql://localhost:3306/sparkplus"
-user = "root"
-password = "9315"
+user = "sparkplus"
+password = "sparkplus"
 
-filepath = "../resource/LI_202101/TL_SCCO_LI.shp"
+# filepath = "../resource/LI_202101/TL_SCCO_LI.shp"
 # table_name = "roadname_address_seoul"
-
+filepath = "../resource/data/daegu_streetlight.csv"
 
 spark, *_ = start_spark()
-
-for table in table_list:
-    name = table + "_df"
-    # globals()[name] = create_df(spark, table)
-    globals()[name] = spark.read.format("jdbc") \
-                            .option("driver", "com.mysql.cj.jdbc.Driver") \
-                            .option("url", url) \
-                            .option("dbtable", table) \
-                            .option("user", user) \
-                            .option("password", password) \
-                            .load()
 
 gdf = gis.load_shp(spark, "../resource/EMD_202101/TL_SCCO_EMD.shp")
 gdf = gdf.to_crs(4326)
@@ -101,7 +93,10 @@ gdf = gdf.to_crs(4326)
 hongdae_lat = 37.55743
 hongdae_lng = 126.92580
 
-additional_info_seoul_df.show()
+my_sdf = spark.read.option("header", True).format("csv").load(filepath, encoding="euc-kr")
+
+# result = coord_to_emd(spark, gdf, sdf, "경도", "위도")
+# result.show()
 # result = coord_to_emd(spark, gdf, hongdae_lng, hongdae_lat)
 
 # result.show()
@@ -119,3 +114,24 @@ jibun_df = coord_to_jibun(spark, gdf, jibun_address_seoul_df, hongdae_lng, hongd
 
 roadname_df = coord_to_roadname(spark, gdf, jibun_address_seoul_df, roadname_address_seoul_df, roadname_code_df, hongdae_lng, hongdae_lat)
 """
+"""
+def create_sjoin_udf(gdf_with_poly, join_column_name):
+	def sjoin_settlement(x, y):
+		gdf_temp = gpd.GeoDataFrame(data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y), columns=['id'])
+		# gdf_temp = gdf_temp.to_crs(4326)
+		gdf_temp.set_crs(epsg=4326, inplace=True)
+		settlement = gpd.sjoin(gdf_temp, gdf_with_poly, how='left', op='within')
+		return settlement.agg({'EMD_CD': lambda x: str(x)}). \
+	reset_index().loc[:, join_column_name].astype('str')
+
+	return pandas_udf(sjoin_settlement, returnType=StringType())
+
+sjoin_udf = create_sjoin_udf(gdf, "EMD_CD")
+
+res_df = my_sdf.withColumn("EMD_CD", sjoin_udf(my_sdf.경도, my_sdf.위도))
+res_df.show()
+"""
+
+
+res_df = join_with_emd(gdf, my_sdf, '경도', '위도')
+res_df.show()

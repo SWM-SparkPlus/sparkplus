@@ -1,7 +1,11 @@
+from geopandas.array import points_from_xy
 from shapely.geometry import Point, Polygon
 from pyspark.sql import Row
 from pyspark.sql.functions import lit
 from pyspark.sql.types import StructField, StructType, DoubleType
+
+from pyspark.sql.types import StringType
+from pyspark.sql.functions import col, pandas_udf
 
 import geopandas as gpd 
 import pandas as pd
@@ -15,9 +19,23 @@ def coord_to_dong(spark, gdf, lng, lat):
     sdf = sdf.select(concat(sdf.EMD_CD, lit("00")).alias('EMD_CD'), 'EMD_ENG_NM', 'EMD_KOR_NM')
     return sdf
 """
+def coord_to_point(spark, df, lng_colname, lat_colname):
+    df['temp'] = [Point(lon, lat) for lon, lat in df[[lng_colname, lat_colname]].values]
+    df['point'] = pd.Series(map(lambda geom: str(geom.to_wkt()), df['temp']), index = df.index, dtype='str')
+    tmp = df.drop('temp', axis=1)
+    res_df = pd.DataFrame(tmp)
+    res_sdf = spark.createDataFrame(tmp).cache(); del tmp
+    return res_sdf, res_df
 
-def coord_df_to_emd(spark, gdf, sdf, lng_colname, lat_colname):
-    pdf = sdf.select('*').toPandas()
+
+def coord_file_to_emd(spark, gdf, filepath, lng_colname, lat_colname):
+    _gdf = spark.read \
+                .option("header", True) \
+                .format("csv") \
+                .load(filepath, encoding='euc-kr')
+    # _gdf = spark.createDataFrame(_file)
+    _gdf.show()
+    pdf = _gdf.select('*').toPandas()
     g_df = gpd.GeoDataFrame(pdf, geometry=gpd.points_from_xy(pdf[lng_colname], pdf[lat_colname]))
     li = list()
     for i in g_df.index:
@@ -28,6 +46,21 @@ def coord_df_to_emd(spark, gdf, sdf, lng_colname, lat_colname):
     g_df = spark.createDataFrame(g_df)
     return g_df
 
+def coord_to_emd(spark, gdf, sdf, lng_colname, lat_colname):
+    
+    pdf = sdf.select('*').toPandas()
+    # pdf = sdf
+    g_df = gpd.GeoDataFrame(pdf, geometry=gpd.points_from_xy(pdf[lng_colname], pdf[lat_colname]))
+    li = list()
+    for i in g_df.index:
+        print(i)
+        for j in gdf.index:
+            if gdf.geometry[j].contains(g_df.geometry[i]):
+                li.append(gdf.EMD_CD[j])
+    g_df.insert(len(g_df.columns), "EMD_CD", li)
+    g_df = spark.createDataFrame(g_df)
+    return g_df
+"""
 def coord_to_emd(spark, gdf, lng, lat, lng_colname='lng', lat_colname='lat'):
     mySchema = StructType([
         StructField(lng_colname, DoubleType(), True),
@@ -37,6 +70,7 @@ def coord_to_emd(spark, gdf, lng, lat, lng_colname='lng', lat_colname='lat'):
     myDf = spark.createDataFrame([myRow], mySchema)
     result = coord_df_to_emd(spark, gdf, myDf, lng_colname, lat_colname)
     return result
+"""
 
 def to_polygon(l):
         return Polygon(h3.h3_to_geo_boundary(l, geo_json=True))
@@ -55,10 +89,26 @@ def coord_to_jibun(spark, gdf, table_df, lng, lat):
     print(jibun_df)
     return jibun_df
 
-def coord_to_roadname(spark, gdf, table_jibun, table_roadname, tabel_roadname_code, lng, lat):
+def coord_to_roadname(spark, gdf, table_jibun, table_roadname, table_roadname_code, lng, lat):
     jibun_df = coord_to_jibun(spark, gdf, table_jibun, lng, lat)
     manage_number = jibun_df.iloc[0]['manage_number']
     roadname_code_df = table_roadname[table_roadname['manage_number'] == manage_number].toPandas()
     roadname_code = roadname_code_df.iloc[0]['roadname_code']
-    result = tabel_roadname_code[tabel_roadname_code['roadname_code'] == roadname_code]
+    result = table_roadname_code[table_roadname_code['roadname_code'] == roadname_code]
     return result
+
+def create_sjoin_udf(gdf_poly, join_column_name):
+    def sjoin_settlement(x, y):
+        gdf_temp = gpd.GeoDataFrame(data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y), columns=['id'])
+        gdf_temp.set_crs(epsg=4326, inplace=True)
+        settlement = gpd.sjoin(gdf_temp, gdf_poly, how='left', op="within")
+        return settlement.agg({'EMD_CD': lambda x: str(x)}).reset_index().loc[:, join_column_name].astype('str')
+    return pandas_udf(sjoin_settlement, returnType=StringType())
+
+def join_with_emd(gdf_poly, sdf, x_colname, y_colname):
+    sjoin_udf = create_sjoin_udf(gdf_poly, "EMD_CD")
+    res_df = sdf.withColumn("EMD_CD", sjoin_udf(sdf.경도, sdf.위도))
+    return res_df
+
+def join_with_h3(sdf, h3_level):
+    
