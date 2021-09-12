@@ -41,7 +41,7 @@ jibun_address_tables = [
 	'jibun_address_ulsan',
 ]
 
-tables = [
+roadname_tables = [
 	'roadname_address_busan',
 	'roadname_address_chungbuk',
 	'roadname_address_chungnam',
@@ -62,32 +62,35 @@ tables = [
     #'roadname_code'
 ]
 
+integrated_tabel = [
+	'integrated_address_busan',
+	'integrated_address_chungbuk',
+	'integrated_address_chungnam',
+	'integrated_address_daegu',
+	'integrated_address_daejeon',
+	'integrated_address_gangwon',
+	'integrated_address_gwangju',
+	'integrated_address_gyeongbuk',
+	'integrated_address_gyeonggi',
+	'integrated_address_gyeongnam',
+	'integrated_address_incheon',
+	'integrated_address_jeju',
+	'integrated_address_jeonbuk',
+	'integrated_address_jeonnam',
+	'integrated_address_sejong',
+	'integrated_address_seoul',
+	'integrated_address_ulsan'     
+]
 
-def load_tables(spark, url, user, password, driver="com.mysql.cj.jdbc.Driver", opt=0):
-    if opt == 'all':
-        result = spark.read.format('jdbc') \
-                                .option('driver', driver) \
-                                .option('url', url) \
-                                .option('dbtable', tables[0]) \
-                                .option('user', user) \
-                                .option('password', password) \
-                                .load()
-        for table in tables[1:]:
-            temp = spark.read.format('jdbc') \
-                                .option('driver', driver) \
-                                .option('url', url) \
-                                .option('dbtable', table) \
-                                .option('user', user) \
-                                .option('password', password) \
-                                .load()
-            result = result.union(temp)
-    else:
-        table = opt
-        result = spark.read.format('jdbc') \
-                                .option('driver', driver) \
-                                .option('url', url) \
-                                .option('dbtable', table) \
-                                .option('user', user) \
-                                .option('password', password) \
-                                .load()
+def load_tables(spark, url, user, password, opt, driver="com.mysql.cj.jdbc.Driver"):
+
+    table = "integrated_address_" + opt
+    result = spark.read.format('jdbc') \
+                .option('driver', driver) \
+            	.option('url', url) \
+                .option('dbtable', table) \
+                .option('user', user) \
+                .option('password', password) \
+                .load()
+
     return result
