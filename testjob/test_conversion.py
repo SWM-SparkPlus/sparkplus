@@ -5,8 +5,9 @@ import pandas as pd
 import geopandas as gpd 
 
 from pyspark.sql import Row
-from pyspark.sql.types import StructField, StructType, DoubleType
+from pyspark.sql.types import *
 from shapely.geometry import Polygon
+from pyspark.sql.functions import udf
 
 import h3
 import folium
@@ -16,7 +17,7 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from dependencies.spark import start_spark
 from jobs.table_to_df import create_df
 from package import gis
-from jobs.conversion import join_with_emd, coord_to_h3, coord_to_jibun, coord_to_roadname
+from jobs.conversion import join_with_h3, join_with_emd, coord_to_h3, coord_to_jibun, coord_to_roadname
 
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import col, pandas_udf
@@ -132,6 +133,26 @@ res_df = my_sdf.withColumn("EMD_CD", sjoin_udf(my_sdf.경도, my_sdf.위도))
 res_df.show()
 """
 
+# res_emd = join_with_emd(gdf, my_sdf, '경도', '위도')
+# res_emd.show()
 
-res_df = join_with_emd(gdf, my_sdf, '경도', '위도')
-res_df.show()
+"""
+def to_polygon(l):
+	return Polygon(h3.h3_to_geo_boundary(l, geo_json=True))
+
+gdf_h3 = res_h3.toPandas()
+gdf_h3 = gpd.GeoDataFrame(gdf_h3)
+gdf_h3['geometry'] = gdf_h3['h3'].apply(to_polygon)
+gdf_h3.crs = {'init': 'epsg:4326'}
+print(gdf_h3)
+
+temp = [35.8734, 128.6103]
+m =folium.Map(temp, zoom_start=14)
+folium.GeoJson(gdf_h3).add_to(m)
+
+m.save('daegu.html')
+
+"""
+
+res = join_with_h3(my_sdf, '경도', '위도', 10)
+res.show()

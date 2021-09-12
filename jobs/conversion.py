@@ -1,10 +1,9 @@
 from geopandas.array import points_from_xy
+from geopandas.tools.sjoin import sjoin
 from shapely.geometry import Point, Polygon
 from pyspark.sql import Row
-from pyspark.sql.functions import lit
-from pyspark.sql.types import StructField, StructType, DoubleType
-
-from pyspark.sql.types import StringType
+from pyspark.sql.functions import lit, udf
+from pyspark.sql.types import *
 from pyspark.sql.functions import col, pandas_udf
 
 import geopandas as gpd 
@@ -97,18 +96,21 @@ def coord_to_roadname(spark, gdf, table_jibun, table_roadname, table_roadname_co
     result = table_roadname_code[table_roadname_code['roadname_code'] == roadname_code]
     return result
 
-def create_sjoin_udf(gdf_poly, join_column_name):
+def create_sjoin_emd(gdf_poly, join_column_name):
     def sjoin_settlement(x, y):
-        gdf_temp = gpd.GeoDataFrame(data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y))
+        gdf_temp = gpd.GeoDataFrame(data=[[a] for a in range(len(x))], geometry=gpd.points_from_xy(x, y))
         gdf_temp.set_crs(epsg=4326, inplace=True)
         settlement = gpd.sjoin(gdf_temp, gdf_poly, how='left', op="within")
         return settlement.agg({'EMD_CD': lambda x: str(x)}).reset_index().loc[:, join_column_name].astype('str')
     return pandas_udf(sjoin_settlement, returnType=StringType())
 
 def join_with_emd(gdf_poly, sdf, x_colname, y_colname):
-    sjoin_udf = create_sjoin_udf(gdf_poly, "EMD_CD")
+    sjoin_udf = create_sjoin_emd(gdf_poly, "EMD_CD")
     res_df = sdf.withColumn("EMD_CD", sjoin_udf(sdf[x_colname], sdf[y_colname]))
     return res_df
 
-#def join_with_h3(sdf, h3_level):
-    
+def join_with_h3(sdf, x_colname, y_colname, h3_level):
+    udf_to_h3 = udf(lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level), returnType=StringType())
+    res_h3 = sdf.withColumn('h3', udf_to_h3(sdf[y_colname], sdf[x_colname]))
+    return res_h3
+
