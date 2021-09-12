@@ -99,7 +99,7 @@ def coord_to_roadname(spark, gdf, table_jibun, table_roadname, table_roadname_co
 
 def create_sjoin_udf(gdf_poly, join_column_name):
     def sjoin_settlement(x, y):
-        gdf_temp = gpd.GeoDataFrame(data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y), columns=['id'])
+        gdf_temp = gpd.GeoDataFrame(data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y))
         gdf_temp.set_crs(epsg=4326, inplace=True)
         settlement = gpd.sjoin(gdf_temp, gdf_poly, how='left', op="within")
         return settlement.agg({'EMD_CD': lambda x: str(x)}).reset_index().loc[:, join_column_name].astype('str')
@@ -107,8 +107,8 @@ def create_sjoin_udf(gdf_poly, join_column_name):
 
 def join_with_emd(gdf_poly, sdf, x_colname, y_colname):
     sjoin_udf = create_sjoin_udf(gdf_poly, "EMD_CD")
-    res_df = sdf.withColumn("EMD_CD", sjoin_udf(sdf.경도, sdf.위도))
+    res_df = sdf.withColumn("EMD_CD", sjoin_udf(sdf[x_colname], sdf[y_colname]))
     return res_df
 
-def join_with_h3(sdf, h3_level):
+#def join_with_h3(sdf, h3_level):
     
