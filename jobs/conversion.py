@@ -101,7 +101,7 @@ def create_sjoin_emd(gdf_poly, join_column_name):
         gdf_temp = gpd.GeoDataFrame(data=[[a] for a in range(len(x))], geometry=gpd.points_from_xy(x, y))
         gdf_temp.set_crs(epsg=4326, inplace=True)
         settlement = gpd.sjoin(gdf_temp, gdf_poly, how='left', op="within")
-        return settlement.agg({'EMD_CD': lambda x: str(x)}).reset_index().loc[:, join_column_name].astype('str')
+        return settlement.agg({'EMD_CD': lambda x: str(x) + '00'}).reset_index().loc[:, join_column_name].astype('str')
     return pandas_udf(sjoin_settlement, returnType=StringType())
 
 def join_with_emd(gdf_poly, sdf, x_colname, y_colname):
@@ -114,3 +114,11 @@ def join_with_h3(sdf, x_colname, y_colname, h3_level):
     res_h3 = sdf.withColumn('h3', udf_to_h3(sdf[y_colname], sdf[x_colname]))
     return res_h3
 
+def join_with_table(gdf_poly, sdf, table_df, x_colname, y_colname):
+    temp_df = join_with_emd(gdf_poly, sdf, x_colname, y_colname)
+    table_df = table_df.dropDuplicates(['bupjungdong_code'])
+    #table_df.show()
+    #print(table_df.count())
+    temp_df.show()
+    res_df = temp_df.join(table_df, temp_df.EMD_CD == table_df.bupjungdong_code, 'left_outer').select(temp_df.EMD_CD, table_df.sido)
+    # res_df.show()

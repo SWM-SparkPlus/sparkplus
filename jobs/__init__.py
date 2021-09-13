@@ -1,3 +1,3 @@
 from .conversion import *
 
-__all__ = ['coord_to_point']
+__all__ = ['join_with_emd', 'join_with_h3']

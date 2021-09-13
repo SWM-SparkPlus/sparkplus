@@ -17,8 +17,8 @@ sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from dependencies.spark import start_spark
 from jobs.table_to_df import create_df
 from package import gis
-from jobs.conversion import join_with_h3, join_with_emd, coord_to_h3, coord_to_jibun, coord_to_roadname
-
+from jobs.conversion import join_with_table, join_with_h3, join_with_emd, coord_to_h3, coord_to_jibun, coord_to_roadname
+from jobs.load_database import load_tables
 from pyspark.sql.types import StringType
 from pyspark.sql.functions import col, pandas_udf
 
@@ -154,5 +154,15 @@ m.save('daegu.html')
 
 """
 
-res = join_with_h3(my_sdf, '경도', '위도', 10)
-res.show()
+# res = join_with_h3(my_sdf, '경도', '위도', 10)
+# res.show()
+
+driver = "com.mysql.cj.jdbc.Driver"
+url = "jdbc:mysql://localhost:3306/sparkplus"
+user = "sparkplus"
+password = "sparkplus"
+
+table_df = load_tables(spark, url, user, password, opt='daegu')
+
+res = join_with_table(gdf, my_sdf, table_df, '경도', '위도')
+# res.show()
