@@ -20,6 +20,7 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
 ### 특이사항
 - 기존에 submit 안되던 emr에서는 s3는 접근 가능했는데 지금은 안됨 
 - 이상한 numpy 버전 충돌 문제
+- 혹시 권한 문제 날 시: sudo chown -R hadoop *
 
 ## Structure
 - spark-plugin: 패키지 폴더
