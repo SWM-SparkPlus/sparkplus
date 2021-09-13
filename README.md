@@ -4,6 +4,23 @@ Spark+는 H3, 위/경도 좌표 등의 공간 정보를 국내 주소체계(신�
 
 Spark+는 Apache Spark와 MySQL을 지원합니다.
 
+## test on EMR
+1. EMR Cluster 생성
+   - 고급 옵션 => 일반 클러스터 설정: 부트스트랩 작업 => 사용자 지정 작업 => s3://sparkplus-core/emr_starter.sh => 키페어 설정 => 생성
+2. user: hadoop 으로 접속 후 패키지 설정
+   - sudo yum install git -y 
+   - sudo python3 -m pip uninstall numpy (2번)
+   - sudo python3 -m pip install numpy
+3. git clone https://git.swmgit.org/swm-12/12_swm12/spark-plugin.git
+4. local에서 리소스 파일 복사
+   - scp -r -i {pem 경로} {resource 경로} hadoop@ec2-13-125-58-200.ap-northeast-2.compute.amazonaws.com:~/spark-plugin
+5. /spark-plugin 에서 테스트
+   - spark-submit ./testjob/demo_app.py 
+
+### 특이사항
+- 기존에 submit 안되던 emr에서는 s3는 접근 가능했는데 지금은 안됨 
+- 이상한 numpy 버전 충돌 문제
+
 ## Structure
 - spark-plugin: 패키지 폴더
 - setup.py: 패키지의 설정, 서문
