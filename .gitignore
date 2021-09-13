@@ -148,6 +148,7 @@ cython_debug/
 *.csv
 
 resource/*
+scripts/*
 
 # test file
 package/test.py
