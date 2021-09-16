@@ -13,7 +13,7 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
    - sudo python3 -m pip install numpy
 3. git clone https://git.swmgit.org/swm-12/12_swm12/spark-plugin.git
 4. local에서 리소스 파일 복사
-   - scp -r -i {pem 경로} {resource 경로} hadoop@ec2-13-125-58-200.ap-northeast-2.compute.amazonaws.com:~/spark-plugin
+   - scp -r -i {pem 경로} {resource 경로} {master node}:~/spark-plugin
 5. /spark-plugin 에서 테스트
    - spark-submit ./testjob/demo_app.py 
 
