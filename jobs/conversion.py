@@ -114,11 +114,30 @@ def join_with_h3(sdf, x_colname, y_colname, h3_level):
     res_h3 = sdf.withColumn('h3', udf_to_h3(sdf[y_colname], sdf[x_colname]))
     return res_h3
 
+def create_sjoin_table(sdf, table):
+    def sjoin_settlement(sdf, table):
+        pass
+    res = sdf.join(table, sdf.EMD_CD == table.bupjungdong_code, how='inner')
+    return pandas_udf(res, returnType=StringType())
+
+
 def join_with_table(gdf_poly, sdf, table_df, x_colname, y_colname):
     temp_df = join_with_emd(gdf_poly, sdf, x_colname, y_colname)
+    # temp_df.show()
     table_df = table_df.dropDuplicates(['bupjungdong_code'])
     #table_df.show()
     #print(table_df.count())
-    temp_df.show()
-    res_df = temp_df.join(table_df, temp_df.EMD_CD == table_df.bupjungdong_code, 'left_outer').select(temp_df.EMD_CD, table_df.sido)
+    # temp_df.show()
+    # res_df.show()
+    # temp_t = temp_df.alias('temp_t')
+    # table_t = table_df.alias('table_t')
+    # res = temp_df.select("EMD_CD")
+    # print(res)
+    # print(temp_df.EMD_CD == table_df.bupjungdong_code)
+    # res_df = temp_df.join(table_df, sjoin_udf).show()
+    res_df = temp_df.join(table_df, [temp_df.EMD_CD == table_df.bupjungdong_code], how='left_outer')
+    
+    return res_df
+    # .select(temp_df.EMD_CD, table_df.sido).show()
+
     # res_df.show()
