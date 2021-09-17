@@ -16,16 +16,23 @@ from jobs.load_database import load_tables
 from package import gis
 
 driver = "com.mysql.cj.jdbc.Driver"
-url = "jdbc:mysql://localhost:3306/sparkplus"
+url = "jdbc:mysql://172.31.63.49:3306/sparkplus"
 user = "sparkplus"
 password = "sparkplus"
 
-filepath = "../resource/data/daegu_streetlight.csv"
-shp = "../resource/EMD_202101/TL_SCCO_EMD.shp"
+filepath = "/home/hadoop/spark-plugin/resource/data/daegu_streetlight.csv"
+shp = "/home/hadoop/spark-plugin/resource/EMD_202101/TL_SCCO_EMD.shp"
 
 if __name__ == "__main__":
 
-    session = SparkSession.builder.appName("demo_app").getOrCreate()
+    session = SparkSession \
+                .builder \
+                .appName("demo_app") \
+                .config("spark.driver.extraClassPath", "/usr/lib/spark/jars/mysql-connector-java-8.0.26.jar") \
+                .getOrCreate()
+    # session.conf.set("spark.sql.execution.arrow.pyspark.enabled", "true")
+    # session.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 20000)
+
     sc = session.sparkContext
     sc.setLogLevel("ERROR")
 
@@ -43,9 +50,18 @@ if __name__ == "__main__":
     emd_df.show()
     
     tdf = pd.read_csv(filepath, encoding='euc-kr')
-    tdf = tdf.iloc[:][:10]
+
+    tdf2 = tdf.iloc[:][10054:10059]
+    tdf2 = session.createDataFrame(tdf2)
+    print("tdf2")
+    tdf2.show()
+    tdf = tdf.iloc[:][10057:10059]
     tdf = session.createDataFrame(tdf)
+    tdf.show()
     tdf = join_with_emd(gdf, tdf, '경도', '위도')
+    tdf.show()
+
+    tdf2 = join_with_emd(gdf, tdf2, '경도', '위도')
 
     """
     h3_df = join_with_h3(my_sdf, "경도", "위도", 10)
@@ -57,10 +73,12 @@ if __name__ == "__main__":
     res_df = join_with_table(gdf, tdf, table_df, '경도', '위도')
     # res_df.show()
     res_df.show()
-    
-    res2_df = join_with_table(gdf, emd_df, table_df, '경도', '위도')
+    """
+    res2_df = join_with_table(gdf, tdf2, table_df, '경도', '위도')
     res2_df.show()
     """
+    """
+    Result vector from pandas_udf was not the required lengt
     def to_polygon(l):
 	    return Polygon(h3.h3_to_geo_boundary(l, geo_json=True))
 
