@@ -25,14 +25,17 @@ def coord_to_dong(spark, gdf, spark_df, lng_colname, lat_colname):
 
 	p_df = spark_to_pandas(spark_df)
 	# geometry = gpd.points_from_xy(p_df['longitude'], p_df['latitude'])
-
+	print("p_df: ", p_df)
 	g_df = gpd.GeoDataFrame(p_df, geometry = gpd.points_from_xy(p_df[lng_colname], p_df[lat_colname]))
 	# g_df = gpd.GeoDataFrame(p_df, geometry=geometry)
+	print("g_df: ", g_df)
 	li = list()
 	for i in g_df.index:
 		for j in gdf.index:
 			if gdf.geometry[j].contains(g_df.geometry[i]):
 				li.append(gdf.EMD_CD[j])
+			# if j == 1: print(gdf.geometry[j], p_df.geometry[i])
+
 	g_df.insert(len(g_df.columns), "EMD_CD", li)
 	# g_df = g_df.drop(columns="geometry")
 	g_df = spark.createDataFrame(g_df)
