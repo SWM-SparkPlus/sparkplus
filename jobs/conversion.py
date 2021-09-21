@@ -52,9 +52,9 @@ def coord_to_emd(spark, gdf, sdf, lng_colname, lat_colname):
     g_df = gpd.GeoDataFrame(pdf, geometry=gpd.points_from_xy(pdf[lng_colname], pdf[lat_colname]))
     li = list()
     for i in g_df.index:
-        print(i)
         for j in gdf.index:
             if gdf.geometry[j].contains(g_df.geometry[i]):
+                print(g_df.geometry[i], gdf.EMD_CD[j])
                 li.append(gdf.EMD_CD[j])
     g_df.insert(len(g_df.columns), "EMD_CD", li)
     g_df = spark.createDataFrame(g_df)
@@ -98,16 +98,10 @@ def coord_to_roadname(spark, gdf, table_jibun, table_roadname, table_roadname_co
 
 def create_sjoin_emd(gdf_poly, join_column_name):
     def sjoin_settlement(x, y):
-        gdf_temp = gpd.GeoDataFrame(data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y))
-        print('gdf_temp')
-        print(gdf_temp)
-        gdf_temp.set_crs(epsg=4326, inplace=True)
-        print('gdf_temp_crs')
-        print(gdf_temp)
+        gdf_temp = gpd.GeoDataFrame(data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y)).set_crs(epsg=4326, inplace=True)
         settlement = gpd.sjoin(gdf_temp, gdf_poly, how='left', op="within")
-        print('settlement')
-        print(settlement)
-        print(settlement.agg({'EMD_CD': lambda x: str(x) + '00'}).reset_index().loc[:, join_column_name].astype('str'))
+        settlement = settlement.drop_duplicates(subset='geometry')
+        # print(settlement.agg({'EMD_CD': lambda x: str(x) + '00'}).reset_index().loc[:, join_column_name].astype('str'))
         return settlement.agg({'EMD_CD': lambda x: str(x) + '00'}).reset_index().loc[:, join_column_name].astype('str')
     return pandas_udf(sjoin_settlement, returnType=StringType())
 
