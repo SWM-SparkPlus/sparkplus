@@ -5,9 +5,13 @@ import geopandas as gpd
 import numpy as np
 import pandas as pd
 import pyspark
+import os
 from pyspark.sql.functions import *
 from pyspark.sql.types import StringType, IntegerType, FloatType, DoubleType,DecimalType
 from pyspark.sql.functions import lit, pandas_udf, PandasUDFType
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def load_shp(spark, file_location):
 	korea = gpd.read_file(file_location, encoding='euc-kr')
@@ -49,16 +53,12 @@ def pandas_to_geopandas(pandas_df):
 	return gpd.GeoDataFrame(pandas_df)
 
 def db_table_to_df(spark, table):
-	driver = "com.mysql.cj.jdbc.Driver"
-	url = "jdbc:mysql://host.docker.internal:3306/sparkplus"
-	user = "root"
-	password = "sparkplus"
 	df = spark.read.format("jdbc")\
-		.option("driver", "com.mysql.cj.jdbc.Driver")\
-		.option("url", url)\
+		.option("driver", os.getenv('DB_DRIVER'))\
+		.option("url", os.getenv('DB_URL'))\
 		.option("dbtable", table)\
-		.option("user", user)\
-		.option("password", password)\
+		.option("user", os.getenv('DB_USER'))\
+		.option("password", os.getenv('DB_PASSWORD'))\
 		.load()
 	return df
 

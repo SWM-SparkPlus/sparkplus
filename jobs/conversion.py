@@ -98,9 +98,16 @@ def coord_to_roadname(spark, gdf, table_jibun, table_roadname, table_roadname_co
 
 def create_sjoin_emd(gdf_poly, join_column_name):
     def sjoin_settlement(x, y):
-        gdf_temp = gpd.GeoDataFrame(data=[[a] for a in range(len(x))], geometry=gpd.points_from_xy(x, y))
+        gdf_temp = gpd.GeoDataFrame(data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y))
+        print('gdf_temp')
+        print(gdf_temp)
         gdf_temp.set_crs(epsg=4326, inplace=True)
+        print('gdf_temp_crs')
+        print(gdf_temp)
         settlement = gpd.sjoin(gdf_temp, gdf_poly, how='left', op="within")
+        print('settlement')
+        print(settlement)
+        print(settlement.agg({'EMD_CD': lambda x: str(x) + '00'}).reset_index().loc[:, join_column_name].astype('str'))
         return settlement.agg({'EMD_CD': lambda x: str(x) + '00'}).reset_index().loc[:, join_column_name].astype('str')
     return pandas_udf(sjoin_settlement, returnType=StringType())
 
@@ -114,18 +121,17 @@ def join_with_h3(sdf, x_colname, y_colname, h3_level):
     res_h3 = sdf.withColumn('h3', udf_to_h3(sdf[y_colname], sdf[x_colname]))
     return res_h3
 
+"""
 def create_sjoin_table(sdf, table):
     def sjoin_settlement(sdf, table):
         pass
     res = sdf.join(table, sdf.EMD_CD == table.bupjungdong_code, how='inner')
     return pandas_udf(res, returnType=StringType())
-
+"""
 
 def join_with_table(gdf_poly, sdf, table_df, x_colname, y_colname):
     temp_df = join_with_emd(gdf_poly, sdf, x_colname, y_colname)
-    # temp_df.show()
     table_df = table_df.dropDuplicates(['bupjungdong_code'])
-    #table_df.show()
     #print(table_df.count())
     # temp_df.show()
     # res_df.show()
