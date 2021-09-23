@@ -3,7 +3,7 @@ import setuptools
 setuptools.setup(
     name="spark-plus",
     version="1.0",
-    license='MIT',
+    license="MIT",
     author="spark-plus",
     author_email="meadea27@gmail.com",
     description="plugin for analyzing Korean address system",
@@ -14,6 +14,6 @@ setuptools.setup(
         # 패키지에 대한 태그
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
-        "Operating System :: OS Independent"
+        "Operating System :: OS Independent",
     ],
 )

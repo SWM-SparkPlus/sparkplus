@@ -153,3 +153,6 @@ scripts/*
 # test file
 package/test.py
 /shp
+
+# Mac dev dependency
+.DS_Store

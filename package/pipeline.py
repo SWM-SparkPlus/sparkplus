@@ -7,22 +7,24 @@ import geopandas as gpd
 import pandas as pd
 import mysql.connector
 import sys
-import os
-import gis
-import h3pandas
-import boto3
+from . import gis
 import pyspark
 from dotenv import load_dotenv
 
-sys.stdout = open(sys.stdout.fileno(), mode='w', encoding='utf8', buffering=1)
+sys.stdout = open(sys.stdout.fileno(), mode="w", encoding="utf8", buffering=1)
 
 spark = SparkSession.builder.appName("Spark App").getOrCreate()
-dict = gis.load_table(spark) #table dictionary 불러오기
+dict = gis.load_table(spark)  # table dictionary 불러오기
 jibun_dict = {}
-for key, val in list(dict.items()) :
-	if 'jibun_address' in key :
-		result = dict[key].select(['bupjungdong_code', 'sido', 'sigungu', 'bupjungeupmyeondong']).dropDuplicates(['bupjungdong_code']).orderBy("bupjungdong_code")
-		jibun_dict[key] = result
+for key, val in list(dict.items()):
+    if "jibun_address" in key:
+        result = (
+            dict[key]
+            .select(["bupjungdong_code", "sido", "sigungu", "bupjungeupmyeondong"])
+            .dropDuplicates(["bupjungdong_code"])
+            .orderBy("bupjungdong_code")
+        )
+        jibun_dict[key] = result
 
 """ shp to polyfill
 gdf = gis.load_shp(spark, "../resource/EMD_202101/TL_SCCO_EMD.shp") #법정동 shp 파일 불러오기
@@ -33,7 +35,7 @@ pd_h3 = pd_h3.drop('geometry', axis=1)
 sdf = spark.createDataFrame(pd_h3)
 """
 
-""" sdf to json 
+""" sdf to json
 sdf.coalesce(1).write.json('v1') #v1이라는 폴더가 생성됨
 sdf.write.json('v2')
 """

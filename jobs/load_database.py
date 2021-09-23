@@ -84,19 +84,23 @@ integrated_table = [
 	'integrated_address_jeonnam',
 	'integrated_address_sejong',
 	'integrated_address_seoul',
-	'integrated_address_ulsan'     
+	'integrated_address_ulsan'
 ]
 
 """
+
+
 def load_tables(spark, url, user, password, opt, driver="com.mysql.cj.jdbc.Driver"):
 
     table = "integrated_address_" + opt
-    result = spark.read.format('jdbc') \
-                .option('driver', driver) \
-            	.option('url', url) \
-                .option('dbtable', table) \
-                .option('user', user) \
-                .option('password', password) \
-                .load()
+    result = (
+        spark.read.format("jdbc")
+        .option("driver", driver)
+        .option("url", url)
+        .option("dbtable", table)
+        .option("user", user)
+        .option("password", password)
+        .load()
+    )
 
     return result
