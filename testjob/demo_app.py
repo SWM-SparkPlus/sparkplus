@@ -2,7 +2,6 @@ import os
 import sys
 
 from shapely.geometry import Polygon
-import folium
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import encode
 import pandas as pd
@@ -27,11 +26,14 @@ localshp = "../resource/EMD_202101/TL_SCCO_EMD.shp"
 
 if __name__ == "__main__":
 
-    session = SparkSession \
-                .builder \
-                .appName("demo_app") \
-                .config("spark.driver.extraClassPath", "/usr/lib/spark/jars/mysql-connector-java-8.0.26.jar") \
-                .getOrCreate()
+    session = (
+        SparkSession.builder.appName("demo_app")
+        .config(
+            "spark.driver.extraClassPath",
+            "/usr/lib/spark/jars/mysql-connector-java-8.0.26.jar",
+        )
+        .getOrCreate()
+    )
     # session.conf.set("spark.sql.execution.arrow.pyspark.enabled", "true")
     # session.conf.set("spark.sql.execution.arrow.maxRecordsPerBatch", 20000)
 
@@ -42,16 +44,17 @@ if __name__ == "__main__":
     gdf = gdf.to_crs(4326)
 
     dataFrameReader = session.read
-    
-    my_sdf = dataFrameReader \
-        .option("header", True) \
-        .format("csv") \
-        .load(localfilepath, encoding='euc-kr')
-    
+
+    my_sdf = (
+        dataFrameReader.option("header", True)
+        .format("csv")
+        .load(localfilepath, encoding="euc-kr")
+    )
+
     emd_df = join_with_emd(gdf, my_sdf, "경도", "위도")
     print("emd_df ------------------------")
     emd_df.show()
-    
+
     """
     tdf = pd.read_csv(localfilepath, encoding='euc-kr')
 
@@ -80,13 +83,13 @@ if __name__ == "__main__":
     h3_df = join_with_h3(my_sdf, "경도", "위도", 10)
     h3_df.show()
     """
-    table_df = load_tables(session, url, user, password, 'daegu')
-    print('table_df ------------------------')
+    table_df = load_tables(session, url, user, password, "daegu")
+    print("table_df ------------------------")
     table_df.show()
 
-    res_df = join_with_table(gdf, emd_df, table_df, '경도', '위도')
+    res_df = join_with_table(gdf, emd_df, table_df, "경도", "위도")
     # res_df.show()
-    print('res_df ------------------------')
+    print("res_df ------------------------")
     res_df.show()
     print(res_df.count())
     """
