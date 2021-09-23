@@ -10,14 +10,14 @@ import geopandas as gpd
 import pandas as pd
 import h3
 
-"""
+
 def coord_to_dong(spark, gdf, lng, lat):
     addr = gdf[gdf.geometry.contains(Point(lng, lat)) == True]
     addr_drop_geom = addr.drop(columns="geometry")
     sdf = spark.createDataFrame(addr_drop_geom)
     sdf = sdf.select(concat(sdf.EMD_CD, lit("00")).alias('EMD_CD'), 'EMD_ENG_NM', 'EMD_KOR_NM')
     return sdf
-"""
+
 def coord_to_point(spark, df, lng_colname, lat_colname):
     df['temp'] = [Point(lon, lat) for lon, lat in df[[lng_colname, lat_colname]].values]
     df['point'] = pd.Series(map(lambda geom: str(geom.to_wkt()), df['temp']), index = df.index, dtype='str')
@@ -59,7 +59,7 @@ def coord_to_emd(spark, gdf, sdf, lng_colname, lat_colname):
     g_df.insert(len(g_df.columns), "EMD_CD", li)
     g_df = spark.createDataFrame(g_df)
     return g_df
-"""
+
 def coord_to_emd(spark, gdf, lng, lat, lng_colname='lng', lat_colname='lat'):
     mySchema = StructType([
         StructField(lng_colname, DoubleType(), True),
@@ -69,7 +69,7 @@ def coord_to_emd(spark, gdf, lng, lat, lng_colname='lng', lat_colname='lat'):
     myDf = spark.createDataFrame([myRow], mySchema)
     result = coord_df_to_emd(spark, gdf, myDf, lng_colname, lat_colname)
     return result
-"""
+
 
 def to_polygon(l):
         return Polygon(h3.h3_to_geo_boundary(l, geo_json=True))
@@ -115,26 +115,9 @@ def join_with_h3(sdf, x_colname, y_colname, h3_level):
     res_h3 = sdf.withColumn('h3', udf_to_h3(sdf[y_colname], sdf[x_colname]))
     return res_h3
 
-"""
-def create_sjoin_table(sdf, table):
-    def sjoin_settlement(sdf, table):
-        pass
-    res = sdf.join(table, sdf.EMD_CD == table.bupjungdong_code, how='inner')
-    return pandas_udf(res, returnType=StringType())
-"""
-
 def join_with_table(gdf_poly, sdf, table_df, x_colname, y_colname):
     temp_df = join_with_emd(gdf_poly, sdf, x_colname, y_colname)
     table_df = table_df.dropDuplicates(['bupjungdong_code'])
-    #print(table_df.count())
-    # temp_df.show()
-    # res_df.show()
-    # temp_t = temp_df.alias('temp_t')
-    # table_t = table_df.alias('table_t')
-    # res = temp_df.select("EMD_CD")
-    # print(res)
-    # print(temp_df.EMD_CD == table_df.bupjungdong_code)
-    # res_df = temp_df.join(table_df, sjoin_udf).show()
     res_df = temp_df.join(table_df, [temp_df.EMD_CD == table_df.bupjungdong_code], how='left_outer')
     
     return res_df

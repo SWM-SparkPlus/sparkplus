@@ -1,6 +1,5 @@
-import pandas as pd
-from pandas import DataFrame
-
+"""
+# 부가정보 테이블
 additional_info_tables = [
 	'additional_info_busan',
 	'additional_info_chungbuk',
@@ -21,6 +20,7 @@ additional_info_tables = [
 	'additional_info_ulsan'
 ]
 
+# 지번주소 테이블
 jibun_address_tables = [
 	'jibun_address_busan',
 	'jibun_address_chungbuk',
@@ -41,6 +41,7 @@ jibun_address_tables = [
 	'jibun_address_ulsan',
 ]
 
+# 도로명주소 테이블
 roadname_tables = [
 	'roadname_address_busan',
 	'roadname_address_chungbuk',
@@ -59,10 +60,14 @@ roadname_tables = [
 	'roadname_address_sejong',
 	'roadname_address_seoul',
 	'roadname_address_ulsan',
-    #'roadname_code'
+    'roadname_code'
 ]
 
-integrated_tabel = [
+# 도로명코드 테이블
+roadname_code_table = ['roadname_code']
+
+# 통합 테이블
+integrated_table = [
 	'integrated_address_busan',
 	'integrated_address_chungbuk',
 	'integrated_address_chungnam',
@@ -82,6 +87,7 @@ integrated_tabel = [
 	'integrated_address_ulsan'     
 ]
 
+"""
 def load_tables(spark, url, user, password, opt, driver="com.mysql.cj.jdbc.Driver"):
 
     table = "integrated_address_" + opt
