@@ -10,7 +10,7 @@ import h3
 
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 
-from jobs.conversion import coord_to_emd, join_with_h3, join_with_emd, join_with_table
+from jobs.conversion import coord_to_emd, join_with_h3, join_with_emd, join_with_table, shp_init
 from jobs.load_database import load_tables
 from package import gis
 
@@ -42,6 +42,8 @@ if __name__ == "__main__":
 
     gdf = gis.load_shp(session, localshp)
     gdf = gdf.to_crs(4326)
+
+    # gdf = shp_init()
 
     dataFrameReader = session.read
 

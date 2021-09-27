@@ -10,6 +10,13 @@ import geopandas as gpd
 import pandas as pd
 import h3
 
+import os
+
+def shp_init():
+    shp = gpd.read_file(os.path.dirname(os.path.abspath(__file__)) + "/../resource/EMD_202101/TL_SCCO_EMD.shp")
+    shp = shp.to_crs(4326)
+    return shp
+
 
 def coord_to_dong(spark, gdf, lng, lat):
     addr = gdf[gdf.geometry.contains(Point(lng, lat)) == True]

@@ -7,7 +7,8 @@ from typing import DefaultDict
 from pyspark import SparkFiles
 from pyspark.sql import SparkSession
 
-from dependencies import logging
+import logging
+
 
 
 def start_spark(
