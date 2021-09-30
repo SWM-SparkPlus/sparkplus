@@ -1,36 +1,53 @@
-from pyspark.sql.functions import lit, udf
+import os
+import sys
+
+from pyspark.sql.functions import lit, udf, pandas_udf
+from pyspark.sql import DataFrame
 from pyspark.sql.types import StringType
+
+import geopandas as gpd
 import h3
 from pyspark.sql import DataFrame
 
 class CustomDataFrame(DataFrame):
 
-	def __init__(self, origin_df: DataFrame):
-		self.origin_df = origin_df
-		self.gpd = None
-
-	def set_gpd(self, gpd):
-		self.gpd = gpd
-
-	def coord_to_h3(self, x_colname, y_colname, h3_level, append=False):
-		"""
-		This function append or replaces h3 columns to the original data frame
-		based on the x,y coordinates.
-		If append is False, drop x,y column
-		"""
-		append_h3 = udf(
-        	lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level), returnType=StringType()
-    	)
-		res_h3 = self.origin_df.withColumn("h3", append_h3(self.origin_df[y_colname], self.origin_df[x_colname]))
-		if not append:
-			res_h3 = res_h3.drop(x_colname)
-			res_h3 = res_h3.drop(y_colname)
+	def __init__(self, origin_df):
+		self._origin_df = origin_df
+		# self._gdf = gdf
+	
+	def coord_to_h3(self, x_colname, y_colname, h3_level):
+		udf_to_h3 = udf(
+			lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level), returnType=StringType()
+		)
+		res_h3 = self._origin_df.withColumn("h3", udf_to_h3(self._origin_df[y_colname], self._origin_df[x_colname]))
 		return res_h3
 
-	def coord_to_zip(self, x_colname, y_colname, append=False):
+	def create_sjoin_pnu(self,  gdf, join_column_name):
+		def sjoin_settlement(x, y):
+			gdf_temp = gpd.GeoDataFrame(
+				data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y)
+			).set_crs(epsg=4326, inplace=True)
+			settlement = gpd.sjoin(gdf_temp, gdf, how='left', op='within')
+			settlement = settlement.drop_duplicates(subset='geometry')
+
+			return (
+				settlement.agg({"PNU": lambda x: str(x)})
+				.reset_index()
+				.loc[:, join_column_name]
+				.astype("str")
+			)
+		return pandas_udf(sjoin_settlement, returnType=StringType())
+
+	def coord_to_pnu(self, gdf, x_colname, y_colname):
+		sjoin_udf = self.create_sjoin_pnu(gdf, "PNU")
+		res_df = self._origin_df.withColumn("PNU", sjoin_udf(self._origin_df[x_colname], self._origin_df[y_colname]))
+		
+		return res_df
+
+	def coord_to_zip(self):
 		self.origin_df = self
 
-	def coord_to_emd(self, x_colname, y_colname, append=False):
+	def coord_to_emd(self, x_colname, y_colname):
 		self.origin_df = self
 
 	def coord_to_address(self):
