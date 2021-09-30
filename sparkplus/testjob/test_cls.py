@@ -7,6 +7,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(
 
 from jobs.sparkplus import CustomDataFrame
 from pyspark.sql import SparkSession
+from sparkplus.dependencies.spark import start_spark
 
 
 driver = "com.mysql.cj.jdbc.Driver"
@@ -17,6 +18,7 @@ password = "sparkplus"
 shp_path = "../resource/shp/LSMD_CONT_LDREG_27_202109.shp"
 data_path = "../resource/data/daegu_streetlight.csv"
 
+"""
 session = (
         SparkSession.builder.appName("demo_app")
         .config(
@@ -25,6 +27,9 @@ session = (
         )
         .getOrCreate()
     )
+"""
+
+session, _ = start_spark()
 
 dataFrameReader = session.read
 
