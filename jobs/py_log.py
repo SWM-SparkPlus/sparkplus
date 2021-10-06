@@ -5,7 +5,7 @@ logger = logging.getLogger(__name__)
 formatter = logging.Formatter('[%(asctime)s[%(levelname)s|%(filename)s:%(lineno)s] >> %(message)s')
 
 stremaHandler = logging.StreamHandler()
-fileHandler = logging.FileHandler('./output.logs')
+fileHandler = logging.FileHandler('../logs/output.logs')
 logger.setLevel(level=logging.DEBUG)
 
 stremaHandler.setFormatter(formatter)
