@@ -2,16 +2,20 @@ import os
 import sys
 
 import geopandas as gpd
+from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__)))))
 
-from jobs.sparkplus import CustomDataFrame
+from sparkplus.core.sparkplus import CustomDataFrame
+from sparkplus.jobs.load_database import load_tables
 from pyspark.sql import SparkSession
 from sparkplus.dependencies.spark import start_spark
+from sparkplus.core.py_log import logger
 
+load_dotenv()
 
 driver = "com.mysql.cj.jdbc.Driver"
-url = "jdbc:mysql://localhost:3306/sparkplus"
+url = "jdbc:mysql://ec2-3-35-104-222.ap-northeast-2.compute.amazonaws.com:3306/sparkplus"
 user = "sparkplus"
 password = "sparkplus"
 
@@ -29,22 +33,52 @@ session = (
     )
 """
 
+# Spark Session을 연다
 session, _ = start_spark()
-
 dataFrameReader = session.read
 
+logger.debug('read_shp')
+# shp파일을 GDF로 불러오고 crs를 세팅한다.
 gdf = gpd.read_file(shp_path, encoding='euc-kr')
 gdf.crs = "epsg:5174"
 gdf = gdf.to_crs(epsg=4326)
+logger.debug('complete read shp')
 
+# 데이터 df를 불러온다.
+logger.debug('read dataframe')
 my_sdf = (
     dataFrameReader.option("header", True)
         .format("csv")
         .load(data_path, encoding="euc-kr")
 )
+logger.debug('complete dataframe')
 
-df = CustomDataFrame(my_sdf)
+# 데이터베이스에서 테이블을 불러온다.
+logger.debug('load_tables')
+table_df = load_tables(session, url, user, password, 'daegu')
+table_df.show()
+logger.debug('complete load_tables')
+# 커스텀데이터프레임을 만든다.
+logger.debug('create custom df')
+df = CustomDataFrame(my_sdf, gdf, table_df, '경도', '위도')
+logger.debug('complete custom df')
+# 기존 데이터 df와 PNU 매칭한다.
+logger.debug('coord_to_pnu')
+pnu_df = df.coord_to_pnu()
+logger.debug('complete coord_to_pnu')
 
+pnu_df.show()
+
+"""
+logger.debug('join with pnu')
 res_df = df.coord_to_pnu(gdf, '경도', '위도')
-
 res_df.show()
+logger.debug('complete join with pnu')
+"""
+
+
+# 기존 데이터 df와 테이블을 조인한다. (PNU => bupjungdong 매칭)
+logger.debug('join_with_table')
+res_df = df.join_with_table()
+res_df.show()
+logger.debug('complete join_with_tables')
