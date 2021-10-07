@@ -77,6 +77,7 @@ def load_table(spark):
         "roadname_address_seoul",
         "roadname_address_ulsan",
         "roadname_code",
+        "integrated_address_daegu"
     ]
 
     for table in table_list:
@@ -94,14 +95,17 @@ logger.debug("Loading complete.")
 #Clear data
 daegu = origin.drop("_c1")
 daegu = daegu.where("_c0 > 10000")
-cdf = sparkplus.CustomDataFrame(daegu)
+custom = sparkplus.CustomDataFrame(daegu, "_c3", "_c2")
 
 #Load parquet file
 logger.debug("Loading parquet...")
-all_df = gpd.read_parquet("s3://sparkplus-core/resource/LSMD/Daegu.parquet")
+shp_df = gpd.read_parquet("s3://sparkplus-core/resource/LSMD/Daegu.parquet")
 logger.debug("Loading complete...")
 
 #Load table from Database
 logger.debug("Loading db...")
 db_dict = load_table(spark)
 logger.debug("Loading complete...")
+
+result = custom.join_with_table(shp_df,db_dict['integrated_address_daegu'])
+result.show()
