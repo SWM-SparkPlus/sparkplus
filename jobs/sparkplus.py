@@ -11,7 +11,7 @@ import h3
 class CustomDataFrame(DataFrame):
 
 	def __init__(self, origin_df):
-		self._origin_df = origin_df
+    		self._origin_df = origin_df
 		# self._gdf = gdf
 	
 	def coord_to_h3(self, x_colname, y_colname, h3_level):
