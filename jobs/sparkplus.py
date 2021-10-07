@@ -7,7 +7,6 @@ from pyspark.sql.types import StringType
 
 import geopandas as gpd
 import h3
-from pyspark.sql import DataFrame
 
 class CustomDataFrame(DataFrame):
 
@@ -64,6 +63,3 @@ class CustomDataFrame(DataFrame):
 
 	def address_to_coord(self):
 		self.origin_df = self
-
-	def coord_to_point(lng_colname, lat_colname):
-		df
