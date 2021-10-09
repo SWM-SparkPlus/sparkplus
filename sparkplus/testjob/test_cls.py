@@ -65,9 +65,10 @@ logger.debug('complete custom df')
 # 기존 데이터 df와 PNU 매칭한다.
 logger.debug('coord_to_pnu')
 pnu_df = df.coord_to_pnu()
-logger.debug('complete coord_to_pnu')
 
 pnu_df.show()
+
+logger.debug('complete coord_to_pnu')
 
 """
 logger.debug('join with pnu')
@@ -82,3 +83,32 @@ logger.debug('join_with_table')
 res_df = df.join_with_table()
 res_df.show()
 logger.debug('complete join_with_tables')
+
+logger.debug('h3_df')
+h3_df = df.coord_to_h3(10)
+h3_df.show()
+logger.debug('complete h3_df')
+
+logger.debug('select zipcode columns')
+zipcode_df = df.coord_to_zipcode()
+zipcode_df.show()
+logger.debug('complete select zip columns')
+
+
+logger.debug('select emd columns')
+emd_df = df.coord_to_emd()
+emd_df.show()
+logger.debug('complete select emd columns')
+
+
+logger.debug('select doromyoung columns')
+doro_df = df.coord_to_doromyoung()
+doro_df.show()
+logger.debug('complete select doromyoung columns')
+
+
+
+logger.debug('select jibun columns')
+jibun_df = df.coord_to_jibun()
+jibun_df.show()
+logger.debug('complete select jibun columns')

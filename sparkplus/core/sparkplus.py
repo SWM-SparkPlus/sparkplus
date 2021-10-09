@@ -35,6 +35,7 @@ def _join_with_table(table_df, pnu_df):
 	res_df = pnu_df.join(
 		table_df, [pnu_df.PNU[0:10] == table_df.bupjungdong_code], how='left_outer'
 	)
+	res_df = res_df.dropDuplicates(['PNU'])
 		
 	return res_df
 
@@ -42,17 +43,17 @@ class CustomDataFrame(DataFrame):
 	"""
 	CustomDataFrame()
 	:param	origin_df
-	:param	x_colname, y_colname
-
-	join_with_table()
 	:param	gdf
 	:param	table_df
+	:param	x_colname
+	:param	y_colname
 
 	coord_to_h3()
 	:param	h3_level
 
 	coord_to_pnu()
-	:param	gdf
+
+	join_with_table()
 	"""
 
 	def __init__(self, origin_df, gdf, table_df, x_colname, y_colname):
@@ -62,8 +63,8 @@ class CustomDataFrame(DataFrame):
 		self._x_colname = x_colname
 		self._y_colname = y_colname
 		
-		self.pnu_df = _coord_to_pnu(origin_df, gdf, x_colname, y_colname)
-		self.joined_df = _join_with_table(table_df, self.pnu_df)
+		self.pnu_df = _coord_to_pnu(origin_df, gdf, x_colname, y_colname).cache()
+		self.joined_df = _join_with_table(table_df, self.pnu_df).cache()
 		# self.pnu_df.show()
 		# self._integrated_df = self.join_with_table()
 		# self._integrated_df.show()
@@ -78,7 +79,34 @@ class CustomDataFrame(DataFrame):
 	
 	def coord_to_pnu(self):
 		return self.pnu_df
-    	
+
+	def coord_to_zipcode(self):
+		joined_df = self.joined_df.select("PNU", "zipcode")
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
+		return res_df
+
+	def coord_to_emd(self):
+		joined_df= self.joined_df.select("PNU", "bupjungdong_code")
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
+		return res_df
+
+	def coord_to_doromyoung(self):
+		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "roadname", "is_basement", "building_primary_number", "building_secondary_number", "bupjungdong_code")
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
+		return res_df
+
+	def coord_to_jibun(self):
+		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "eupmyeondong", "bupjungli", "jibun_primary_number", "jibun_secondary_number")
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
+		return res_df
+
+	"""
+	def coord_to_zipcode2(self):
+		pnu_df = self.pnu_df
+		res_df = pnu_df.withColumn('zipcode', self.joined_df['zipcode'])
+		return res_df
+	"""
+
 	def join_with_table(self):
 		return self.joined_df
 
