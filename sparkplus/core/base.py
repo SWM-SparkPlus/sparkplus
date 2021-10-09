@@ -7,45 +7,6 @@ import geopandas as gpd
 import h3
 
 
-def create_sjoin_pnu(gdf: GeoDataFrame, join_column_name: str):
-    def sjoin_settlement(x, y):
-        gdf_temp = gpd.GeoDataFrame(
-            data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y)
-        ).set_crs(epsg=4326, inplace=True)
-        settlement: GeoDataFrame = gpd.sjoin(gdf_temp, gdf, how="left", op="within")
-        settlement = settlement.drop_duplicates(subset="geometry")
-
-        return (
-            settlement.agg({"PNU": str(x)})
-            .reset_index()
-            .loc[:, join_column_name]
-            .astype("str")
-        )
-
-    return pandas_udf(sjoin_settlement, returnType=types.StringType())
-
-
-def _coord_to_pnu(
-    origin_df: DataFrame, gdf: GeoDataFrame, x_colname: str, y_colname: str
-):
-    sjoin_udf = create_sjoin_pnu(gdf, "PNU")
-    res_df = origin_df.withColumn(
-        "PNU", sjoin_udf(origin_df[x_colname], origin_df[y_colname])
-    )
-    return res_df
-
-
-def _join_with_table(table_df: DataFrame, pnu_df: DataFrame):
-    # temp_df = self.coord_to_pnu()
-    table_df = table_df.dropDuplicates(["bupjungdong_code"])
-    res_df = pnu_df.join(
-        table_df, [pnu_df.PNU[0:10] == table_df.bupjungdong_code], how="left_outer"
-    )
-    res_df = res_df.dropDuplicates(["PNU"])
-
-    return res_df
-
-
 class CustomDataFrame(object):
     """
     CustomDataFrame()
@@ -63,43 +24,70 @@ class CustomDataFrame(object):
     join_with_table()
     """
 
-    def __init__(
-        self,
-        origin_df: DataFrame,
-        gdf=None,
-        table_df=None,
-        x_colname=None,
-        y_colname=None,
-    ):
-        self._origin_df = origin_df
-        self._gdf = gdf
-        self._table = table_df
-        self._x_colname = x_colname
-        self._y_colname = y_colname
+    def __init__(self, dataFrame: DataFrame):
+        self._df = dataFrame
 
-        self.pnu_df = _coord_to_pnu(origin_df, gdf, x_colname, y_colname).cache()
-        self.joined_df = _join_with_table(table_df, self.pnu_df).cache()
+        # self.pnu_df = _coord_to_pnu(dataFrame, gdf, x_colname, y_colname).cache()
+        # self.joined_df = _join_with_table(table_df, self.pnu_df).cache()
+
         # self.pnu_df.show()
         # self._integrated_df = self.join_with_table()
         # self._integrated_df.show()
         # self._gdf = gdf
 
-    def coord_to_h3(self, h3_level):
+    # def sjoin_settlement(self, lat, lng):
+    #         gdf_temp = gpd.GeoDataFrame(
+    #             data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y)
+    #         ).set_crs(epsg=4326, inplace=True)
+    #         settlement: GeoDataFrame = gpd.sjoin(gdf_temp, gdf, how="left", op="within")
+    #         settlement = settlement.drop_duplicates(subset="geometry")
+
+    #         return settlement.agg({"PNU": str(x)})\
+    #             .reset_index()\
+    #             .loc[:, join_column_name]\
+    #             .astype("str")
+
+    # def create_sjoin_pnu(self, gdf: GeoDataFrame, join_column_name: str):
+    #     return pandas_udf(self.sjoin_settlement, returnType=types.StringType())
+
+    # def _coord_to_pnu(
+    #     origin_df: DataFrame, gdf: GeoDataFrame, x_colname: str, y_colname: str
+    # ):
+    #     sjoin_udf = create_sjoin_pnu(gdf, "PNU")
+    #     res_df = origin_df.withColumn(
+    #         "PNU", sjoin_udf(origin_df[x_colname], origin_df[y_colname])
+    #     )
+    #     return res_df
+
+    def _join_with_table(
+        self, table_df: DataFrame, pnu_df: GeoDataFrame, drop_dups: bool = True
+    ):
+        # 테이블 및 파케이 데이터프레임이 메모리에 상주하지 않다면 에러 발생
+        if table_df is None or pnu_df is None:
+            raise NotImplementedError
+
+        # 데이터베이스에 법정동 코드가 중복되어 중복 제거
+        if drop_dups:
+            table_df = table_df.dropDuplicates(["bupjungdong_code"])
+
+        return pnu_df.join(
+            table_df, [pnu_df.PNU[0:10] == table_df.bupjungdong_code], how="left_outer"
+        ).drop_duplicates(["PNU"])
+
+    def coord_to_h3(self, h3_level: int):
         udf_to_h3 = udf(
             lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level),
             returnType=types.StringType(),
         )
 
-        res_h3 = self._origin_df.withColumn(
+        res_h3 = self._df.withColumn(
             "h3",
-            udf_to_h3(
-                self._origin_df[self._y_colname], self._origin_df[self._x_colname]
-            ),
+            udf_to_h3(self._df[self._y_colname], self._df[self._x_colname]),
         )
         return res_h3
 
-    def coord_to_pnu(self):
-        return self.pnu_df
+    # def coord_to_pnu(self):
+    #     return self.pnu_df
 
     def coord_to_zipcode(self):
         joined_df = self.joined_df.select("PNU", "zipcode")

@@ -1,8 +1,9 @@
+from typing import overload
 from geopandas.array import points_from_xy
 from geopandas.tools.sjoin import sjoin
 from shapely.geometry import Point, Polygon
 from pyspark.sql import Row
-from pyspark.sql.functions import lit, udf
+from pyspark.sql.functions import concat, lit, udf
 from pyspark.sql.types import *
 from pyspark.sql.functions import col, pandas_udf
 
@@ -84,6 +85,7 @@ def coord_to_emd(spark, gdf, sdf, lng_colname, lat_colname):
     return g_df
 
 
+@overload
 def coord_to_emd(spark, gdf, lng, lat, lng_colname="lng", lat_colname="lat"):
     mySchema = StructType(
         [
