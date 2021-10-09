@@ -1,9 +1,6 @@
-import os
-import sys
-
 from pyspark.sql.functions import lit, udf, pandas_udf
 from pyspark.sql import DataFrame
-from pyspark.sql.types import StringType
+from pyspark.sql import types
 
 import geopandas as gpd
 import h3
@@ -24,7 +21,7 @@ def create_sjoin_pnu(gdf, join_column_name):
             .astype("str")
         )
 
-    return pandas_udf(sjoin_settlement, returnType=StringType())
+    return pandas_udf(sjoin_settlement, returnType=types.StringType())
 
 
 def _coord_to_pnu(origin_df, gdf, x_colname, y_colname):
@@ -80,7 +77,7 @@ class CustomDataFrame(DataFrame):
     def coord_to_h3(self, h3_level):
         udf_to_h3 = udf(
             lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level),
-            returnType=StringType(),
+            returnType=types.StringType(),
         )
 
         res_h3 = self._origin_df.withColumn(
@@ -156,7 +153,7 @@ class CustomDataFrame(DataFrame):
 				.loc[:, join_column_name]
 				.astype("str")
 			)
-		return pandas_udf(sjoin_settlement, returnType=StringType())
+		return pandas_udf(sjoin_settlement, returnType=types.StringType())
 
 	def join_with_table(self):
 		temp_df = self.coord_to_pnu()
