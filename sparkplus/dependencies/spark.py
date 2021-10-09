@@ -5,6 +5,7 @@ import json
 from pyspark import SparkFiles
 from pyspark.sql import SparkSession
 
+
 def start_spark(
     app_name="my_spark_app",
     master="local[*]",

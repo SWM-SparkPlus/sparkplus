@@ -12,8 +12,12 @@ import h3
 
 import os
 
+
 def shp_init():
-    shp = gpd.read_file(os.path.dirname(os.path.abspath(__file__)) + "/../resource/EMD_202101/TL_SCCO_EMD.shp")
+    shp = gpd.read_file(
+        os.path.dirname(os.path.abspath(__file__))
+        + "/../resource/EMD_202101/TL_SCCO_EMD.shp"
+    )
     shp = shp.to_crs(4326)
     return shp
 

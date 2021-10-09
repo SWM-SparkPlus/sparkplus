@@ -8,11 +8,13 @@ from py_log import logger
 
 load_dotenv()
 
+
 def load_shp_from_s3(bucket, key):
-	return gpd.read_parquet(f's3://{bucket}/{key}')
+    return gpd.read_parquet(f"s3://{bucket}/{key}")
+
 
 def db_table_to_df(spark, table):
-	df = (
+    df = (
         spark.read.format("jdbc")
         .option("driver", os.getenv("DB_DRIVER"))
         .option("url", os.getenv("DB_URL"))
@@ -21,7 +23,8 @@ def db_table_to_df(spark, table):
         .option("password", os.getenv("DB_PASSWORD"))
         .load()
     )
-	return df
+    return df
+
 
 def load_table(spark):
     table_list = [
@@ -77,7 +80,7 @@ def load_table(spark):
         "roadname_address_seoul",
         "roadname_address_ulsan",
         "roadname_code",
-        "integrated_address_daegu"
+        "integrated_address_daegu",
     ]
 
     for table in table_list:
@@ -85,27 +88,28 @@ def load_table(spark):
         globals()[name] = db_table_to_df(spark, table)
     return globals()
 
+
 spark = SparkSession.builder.appName("Spark App").getOrCreate()
 
-#Load csv file
+# Load csv file
 logger.debug("Loading csv...")
 origin = spark.read.csv("s3://sparkplus-core/resource/data/daegu_streetlight.csv")
 logger.debug("Loading complete.")
 
-#Clear data
+# Clear data
 daegu = origin.drop("_c1")
 daegu = daegu.where("_c0 > 10000")
 custom = sparkplus.CustomDataFrame(daegu, "_c3", "_c2")
 
-#Load parquet file
+# Load parquet file
 logger.debug("Loading parquet...")
 shp_df = gpd.read_parquet("s3://sparkplus-core/resource/LSMD/Daegu.parquet")
 logger.debug("Loading complete...")
 
-#Load table from Database
+# Load table from Database
 logger.debug("Loading db...")
 db_dict = load_table(spark)
 logger.debug("Loading complete...")
 
-result = custom.join_with_table(shp_df,db_dict['integrated_address_daegu'])
+result = custom.join_with_table(shp_df, db_dict["integrated_address_daegu"])
 result.show()

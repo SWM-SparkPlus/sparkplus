@@ -7,9 +7,9 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
 - spark
    - `start_spark(app_name, master, jar_packages, files, spark_config)`
       ```
-      from dependecnies.spark import start_spark 
+      from dependecnies.spark import start_spark
 
-      spark, *_ = start_spark  
+      spark, *_ = start_spark
       ```
       - spark session을 시작합니다.
       - params
@@ -77,7 +77,7 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
     - return
       - 위/경도 좌표와 법정동 코드, 주소정보가 맵핑된 spark-dataframe
 
-### package 
+### package
 - /gis
    - `gis_init()`
    - `coord_to_dong(spark, gdf, spark_df, lng_colname, lat_colname)`
