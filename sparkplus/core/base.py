@@ -1,3 +1,5 @@
+from typing import List
+from pyspark.sql.session import SparkSession
 from geopandas.geodataframe import GeoDataFrame
 from pyspark.sql.functions import col, column, lit, udf, pandas_udf
 from pyspark.sql import DataFrame
@@ -35,9 +37,6 @@ class SPDataFrame(object):
             pnu_df (GeoDataFrame): shp Parquet로부터 생성한 GeoDataFrame
             drop_dups (bool, optional): 법정동코드 중복 제거 여부. Defaults to True.
 
-        Raises:
-            `ValueError`
-
         Returns:
             `pyspark.sql.DataFrame`
         """
@@ -53,17 +52,107 @@ class SPDataFrame(object):
             table_df, [pnu_df.PNU[0:10] == table_df.bupjungdong_code], how="left_outer"
         ).drop_duplicates(["PNU"])
 
-    def coord_to_h3(self, h3_level: int):
-        udf_to_h3 = udf(
-            lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level),
-            returnType=types.StringType(),
-        )
+    # TODO: tablenames를 List[ESido] 또는 테이블명을 가진 List 형태로 변경
+    @classmethod
+    def get_db_df_by_tablenames(
+        cls, sparkSession: SparkSession, tablenames: List[str], **kwargs
+    ):
+        """
+        Summary
+        -------
+        테이블명을 기반으로 Spark DataFrame을 반환합니다.
 
-        res_h3 = self._df.withColumn(
-            "h3",
-            udf_to_h3(self._df[self._y_colname], self._df[self._x_colname]),
-        )
-        return res_h3
+        Parameter
+        ----
+        sparkSession: Active Spark Session
+        tablenames: DataFrame으로 만들 테이블명
+        **kwargs: `driver`, `url`, `user`, `password`
+
+        Raises:
+            ValueError
+
+        Returns:
+            `DataFrame`s from database
+
+
+        Usage
+        -----
+        >>> import SPDataFrame
+        >>> ss = SparkSession.builder.getOrCreate()
+        >>> tablenames = ['integrated_address_seoul', 'integrated_address_incheon', 'integrated_address_gyeonggi']
+        >>> table_dfs = SPDataFrame(ss, tablenames,
+                            driver='com.mysql.cj.jdbc.Driver',
+                            url='jdbc:mysql://localhost:3306/sparkplus',
+                            user='root',
+                            password='password'
+                            )
+        >>> table_dfs.select('roadname_code', 'sido', 'sigungu', 'eupmyeondong').show()
+        +-------------+----------+-------------+------------+
+        |roadname_code|      sido|      sigungu|eupmyeondong|
+        +-------------+----------+-------------+------------+
+        | 261103125011|부산광역시|         중구|      영주동|
+        | 261104006006|부산광역시|         중구|      영주동|
+        | 261104006006|부산광역시|         중구|      영주동|
+        | 261104006006|부산광역시|         중구|      영주동|
+        | 261103125011|부산광역시|         중구|      영주동|
+        | 111104100289|서울특별시|       종로구|      청운동|
+        | 111104100289|서울특별시|       종로구|      청운동|
+        | 111103100014|서울특별시|       종로구|      청운동|
+        | 111104100289|서울특별시|       종로구|      청운동|
+        | 111104100289|서울특별시|       종로구|      청운동|
+        | 411114322017|    경기도|수원시 장안구|      파장동|
+        | 411114322017|    경기도|수원시 장안구|      파장동|
+        | 411114322017|    경기도|수원시 장안구|      파장동|
+        | 411114322017|    경기도|수원시 장안구|      파장동|
+        | 411114322017|    경기도|수원시 장안구|      파장동|
+        +-------------+----------+-------------+------------+
+        """
+        sess_conf = sparkSession.sparkContext.getConf().getAll()
+
+        # If SparkConf doesn't have MySQL driver, raise `ValueError`
+        jdbc_driver_flag = False
+        for (conf_key, conf_val) in sess_conf:
+            if conf_key == "spark.driver.extraClassPath" and conf_val.__contains__(
+                "mysql"
+            ):
+                jdbc_driver_flag = True
+                break
+
+        if not jdbc_driver_flag:
+            raise ValueError(
+                "[SPARKPLUS_EXTRA_JAR_ERR] "
+                "Your Spark session seems that it doesn't contains extra class path for mysql connector. "
+                "Please specify to use SparkPlus package properly.\n\n"
+                "$ spark-submit <your-spark-app> --extra-class-path <mysql-jar-path>"
+                "\n\nIn programming way, set spark conf like\n\n"
+                ">>> ss = SparkSession.builder.config('spark.driver.extraClassPath', MYSQL_JAR_PATH)\n\n"
+                "Check https://spark.apache.org/docs/latest/configuration.html for detail."
+            )
+
+        ss_read = sparkSession.read.format("jdbc")
+
+        # set DB options such as driver, url, user, password
+        for opt_key, opt_val in kwargs.items():
+            ss_read.option(opt_key, opt_val)
+
+        dfs = ss_read.option("dbtable", tablenames.pop()).load()
+
+        for tablename in tablenames:
+            dfs = dfs.union(ss_read.option("dbtable", tablename).load())
+
+        return dfs
+
+    # def coord_to_h3(self, h3_level: int):
+    #     udf_to_h3 = udf(
+    #         lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level),
+    #         returnType=types.StringType(),
+    #     )
+
+    #     res_h3 = self._df.withColumn(
+    #         "h3",
+    #         udf_to_h3(self._df[self._y_colname], self._df[self._x_colname]),
+    #     )
+    #     return res_h3
 
     # def coord_to_pnu(self):
     #     return self.pnu_df
@@ -111,9 +200,6 @@ class SPDataFrame(object):
 		res_df = pnu_df.withColumn('zipcode', self.joined_df['zipcode'])
 		return res_df
 	"""
-
-    def join_with_table(self):
-        return self.joined_df
 
     """
 	def create_sjoin_pnu(self, join_column_name):
