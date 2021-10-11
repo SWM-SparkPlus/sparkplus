@@ -25,8 +25,9 @@ class SPDataFrame(object):
     def __init__(self, dataFrame: DataFrame):
         self._df = dataFrame
 
+    @classmethod
     def table_pnu_df_join(
-        self,
+        cls,
         table_df: DataFrame,
         pnu_df: GeoDataFrame,
         drop_dup_bupjungdong_code: bool = True,

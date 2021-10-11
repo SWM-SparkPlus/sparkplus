@@ -157,3 +157,6 @@ package/test.py
 
 # Mac dev dependency
 .DS_Store
+
+sparkplus/core/test.py
+
