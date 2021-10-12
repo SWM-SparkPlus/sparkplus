@@ -1,7 +1,7 @@
 from typing import Type
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import udf, split
-from pyspark.sql.types import StringType
+from pyspark.sql.types import IntegerType, StringType, ArrayType
 
 class RoadnameDataframe(object):
 	"""
@@ -60,5 +60,70 @@ class RoadnameDataframe(object):
 	def cleanse_split_column(self):
 		"""
 		add_split_column 함수로 쪼개진 split 컬럼의 데이터를 전처리합니다
+
+		UDF
+		---
+		where_is_sido : IntegerType
+			split 컬럼에서 특별시와 광역시, 도를 찾고, 위치한 인덱스를 반환합니다
+			
+			Exmaple
+			-------
+			>>> df.show()
+			+------------------------------+
+			|                         split|
+			+------------------------------+
+			|      [[185-74], 경기도, 화...  |
+			|    [185-74, 경기도, 화성시...	  |
+			|       [[445-941], 경기, 화...  |
+			|          [Gyeonggi-do, Hwa...|
+			+------------------------------+
+
+			>>> df.withColumn('idx', where_is_sido(split)).show()
+			+------------------------------+---+
+			|                         split|idx|
+			+------------------------------+---+
+			|      [[185-74], 경기도, 화...  |  1|
+			|    [185-74, 경기도, 화성시...   |  1|
+			|       [[445-941], 경기, 화...  |  1|
+			|          [Gyeonggi-do, Hwa...|  5|
+			+------------------------------+---+
+			
+		cleanse_split: ArrayType(StringType)
+			split 컬럼에서 찾은 도와 특별, 광역시의 인덱스부터 끝까지 값을 반환합니다
+
+			Example
+			-------
+			df.show()
+			+-------------------------------+
+			|                          split|
+			+-------------------------------+
+			|		  [[185-74], 경기도, 화...|
+			|   	 [185-74, 경기도, 화성시...|
+			|      	  [[445-941], 경기, 화...|
+			+-------------------------------+
+			df.withColumn('split', cleanse_split(df.split))
+			+--------------------------------+
+			|                           split|
+			+--------------------------------+
+			|  	   [경기도, 화성시, 장안면, 매...  |
+			|		 [경기도, 화성시, 장안면, 돌...|
+			| 	   [경기, 화성시, 장안면, 석포...  |
+			+--------------------------------+
 		"""
-		
+		@udf(IntegerType())
+		def where_is_sido(split):
+			for i in range(len(split)):
+				if self._sido_dictionary.get(split[i]) or self._sido_reverse_dictionary.get(split[i]):
+					return i
+			return -1
+
+		@udf(ArrayType(StringType()))
+		def cleanse_split(idx, split):
+			if idx != -1:
+				return split[idx:]
+			return split
+
+		self.df = self.df \
+						.withColumn('idx', where_is_sido(self.df.split)) \
+						.withColumn('split', cleanse_split(self.idx, self.split))
+		self.df = self.df.drop('idx')
