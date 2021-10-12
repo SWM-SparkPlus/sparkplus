@@ -20,6 +20,7 @@ class RoadnameDataframe(object):
 		도로명을 지번으로 변경하는 전 과정을 포함하는 함수입니다
 		"""
 		self.add_split_column(target)
+		self.cleanse_split_column()
 		return self.df
 
 	def add_split_column(self, target: str):
@@ -87,7 +88,7 @@ class RoadnameDataframe(object):
 			|       [[445-941], 경기, 화...  |  1|
 			|          [Gyeonggi-do, Hwa...|  5|
 			+------------------------------+---+
-			
+
 		cleanse_split: ArrayType(StringType)
 			split 컬럼에서 찾은 도와 특별, 광역시의 인덱스부터 끝까지 값을 반환합니다
 
