@@ -18,6 +18,7 @@ class RoadnameDataframe(object):
 		"""
 		도로명을 지번으로 변경하는 전 과정을 포함하는 함수
 		"""
+		df = self.add_split_column(target)
 
 	def add_split_column(self, target: str):
 		"""
