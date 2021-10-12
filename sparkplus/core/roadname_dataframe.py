@@ -112,18 +112,7 @@ class RoadnameDataframe(object):
 			| 	   [경기, 화성시, 장안면, 석포...  |
 			+--------------------------------+
 		"""
-		@udf(IntegerType())
-		def where_is_sido(split):
-			for i in range(len(split)):
-				if self._sido_dictionary.get(split[i]) or self._sido_reverse_dictionary.get(split[i]):
-					return i
-			return -1
-
-		@udf(ArrayType(StringType()))
-		def cleanse_split(idx, split):
-			if idx != -1:
-				return split[idx:]
-			return split
+		from udfs import where_is_sido, cleanse_split
 
 		self._df = self._df \
 						.withColumn('idx', where_is_sido(self._df.split)) \
