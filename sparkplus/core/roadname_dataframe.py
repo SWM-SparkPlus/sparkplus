@@ -9,11 +9,10 @@ class RoadnameDataframe(object):
 	"""
 	def __init__(self, dataFrame: DataFrame):
 		self._df = dataFrame
-		self.df = None
 		self._sido_short_list = ["서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "전북", "전남", "경북", "경남", "제주"]
 		self._sido_long_list = ["서울특별시","부산광역시","대구광역시","인천광역시","광주광역시","대전광역시","울산광역시","세종특별자치시",'경기도',"강원도","충청북도","충청남도","전라북도","전라남도","경상북도","경상남도","제주특별자치도"]
-		self._sido_dictionary = dict(zip(self.sido_short_list, self.sido_long_list))
-		self._sido_reverse_dictionary = dict(zip(self.sido_long_list, self.sido_short_list))
+		self._sido_dictionary = dict(zip(self._sido_short_list, self._sido_long_list))
+		self._sido_reverse_dictionary = dict(zip(self._sido_long_list, self._sido_short_list))
 
 	def roadname_to_bupjeongdong_code(self, target: str):
 		"""
@@ -21,7 +20,7 @@ class RoadnameDataframe(object):
 		"""
 		self.add_split_column(target)
 		self.cleanse_split_column()
-		return self.df
+		return RoadnameDataframe(self._df)
 
 	def add_split_column(self, target: str):
 		"""
@@ -56,7 +55,8 @@ class RoadnameDataframe(object):
 		"""
 		if hasattr(self._df, target):
 			raise TypeError("Dataframe does not have" + str + "column")
-		self.df = self._df.withColumn('split', split(self._df[target], ' '))
+		self._df = self._df.withColumn('split', split(self._df[target], ' '))
+		return RoadnameDataframe(self._df)
 
 	def cleanse_split_column(self):
 		"""
@@ -125,7 +125,8 @@ class RoadnameDataframe(object):
 				return split[idx:]
 			return split
 
-		self.df = self.df \
-						.withColumn('idx', where_is_sido(self.df.split)) \
+		self._df = self._df \
+						.withColumn('idx', where_is_sido(self._df.split)) \
 						.withColumn('split', cleanse_split(self.idx, self.split))
-		self.df = self.df.drop('idx')
+		self._df = self._df.drop('idx')
+		return RoadnameDataframe(self._df)
