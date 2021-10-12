@@ -5,7 +5,7 @@ from pyspark.sql.types import StringType
 
 class RoadnameDataframe(object):
 	"""
-	도로명 주소를 활용하여 데이터를 분석하기 위한 클래스 입니다.
+	도로명 주소를 활용하여 데이터를 분석하기 위한 클래스
 	"""
 	def __init__(self, dataFrame: DataFrame):
 		self._df = dataFrame
@@ -14,14 +14,19 @@ class RoadnameDataframe(object):
 		self._sido_dictionary = dict(zip(self.sido_short_list, self.sido_long_list))
 		self._sido_reverse_dictionary = dict(zip(self.sido_long_list, self.sido_short_list))
 
+	def roadname_to_bupjeongdong_code(self, target: str):
+		"""
+		도로명을 지번으로 변경하는 전 과정을 포함하는 함수
+		"""
+
 	def add_split_column(self, target: str):
 		"""
-		DB에서 조회를 위해 원본의 string을 공백 기준으로 나누는 함수 입니다
+		DB에서 조회를 위해 원본의 string을 공백 기준으로 나누는 함수
 
 		Parameters
 		----------
 		target : str
-			split하고 조작할 원본 데이터의 컬럼명 입니다. 
+			split하고 조작할 원본 데이터의 컬럼명
 		
 		Examples
 		--------
