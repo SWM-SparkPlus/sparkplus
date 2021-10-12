@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__)))))
 
-from sparkplus.core.sparkplus import CustomDataFrame
+from sparkplus.core.sparkplus import CoordDataFrame
 from sparkplus.jobs.load_database import load_tables
 from pyspark.sql import SparkSession
 from sparkplus.dependencies.spark import start_spark
@@ -60,7 +60,7 @@ table_df.show()
 logger.debug('complete load_tables')
 # 커스텀데이터프레임을 만든다.
 logger.debug('create custom df')
-df = CustomDataFrame(my_sdf, gdf, table_df, '경도', '위도')
+df = CoordDataFrame(my_sdf, gdf, table_df, '경도', '위도')
 logger.debug('complete custom df')
 # 기존 데이터 df와 PNU 매칭한다.
 logger.debug('coord_to_pnu')
@@ -102,7 +102,7 @@ logger.debug('complete select emd columns')
 
 
 logger.debug('select doromyoung columns')
-doro_df = df.coord_to_doromyoung()
+doro_df = df.coord_to_roadname()
 doro_df.show()
 logger.debug('complete select doromyoung columns')
 

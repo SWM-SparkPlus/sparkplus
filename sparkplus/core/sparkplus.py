@@ -39,112 +39,148 @@ def _join_with_table(table_df, pnu_df):
 		
 	return res_df
 
-class CustomDataFrame(DataFrame):
+class CoordDataFrame(DataFrame):
 	"""
-	CustomDataFrame()
-	:param	origin_df
-	:param	gdf
-	:param	table_df
-	:param	x_colname
-	:param	y_colname
+	Summary
+	-------
+	위경도 좌표가 포함된 Spark DataFrame에 법정읍면동, h3, 우편번호 정보를 추가합니다.
 
-	coord_to_h3()
-	:param	h3_level
+	Args:
+		origin_sdf (Spark DataFrame):  위경도 좌표가 포함된 원본 Spark DataFrame
+		gdf (GeoDataFrame): shp Parquet으로부터 생성한 GeoDataFrame
+		tdf (Spark DataFrame): 데이터베이스로부터 생성한 Spark DataFrame
+		x_colname (String): 원본 Spark DataFrame의 경도 컬럼 이름
+		y_colname (String): 원본 Spark DataFrame의 위도 컬럼 이름
 
-	coord_to_pnu()
-
-	join_with_table()
+	Usage
+	-------
+	>>> from sparkplus.core.sparkplus import CoordDataFrame
+	>>> df = CoordDataFrame(origin_sdf, gdf, tdf, x_colname, y_colname)
 	"""
 
-	def __init__(self, origin_df, gdf, table_df, x_colname, y_colname):
-		self._origin_df = origin_df
+	def __init__(self, origin_sdf, gdf, tdf, x_colname, y_colname):
+		self._origin_sdf = origin_sdf
 		self._gdf = gdf
-		self._table = table_df
+		self._tdf= tdf
 		self._x_colname = x_colname
 		self._y_colname = y_colname
 		
-		self.pnu_df = _coord_to_pnu(origin_df, gdf, x_colname, y_colname).cache()
-		self.joined_df = _join_with_table(table_df, self.pnu_df).cache()
-		# self.pnu_df.show()
-		# self._integrated_df = self.join_with_table()
-		# self._integrated_df.show()
-		# self._gdf = gdf
+		self.pnu_df = _coord_to_pnu(origin_sdf, gdf, x_colname, y_colname).cache()
+		self.joined_df = _join_with_table(tdf, self.pnu_df).cache()
+
 	def coord_to_h3(self, h3_level):
+		"""
+		Summary
+		-------
+		위경도 좌표가 포함된 원본 Spark DataFrame에 h3 정보를 추가합니다.
+
+		Args:
+			h3_level (Int): 추가하고자 하는 h3 level
+		
+		Usage
+		-------
+		>>> from sparkplus.core.sparkplus import CoordDataFrame
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_h3(10)
+		"""
 		udf_to_h3 = udf(
 		lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level), returnType=StringType()
-	)
+		)
 
-		res_h3 = self._origin_df.withColumn("h3", udf_to_h3(self._origin_df[self._y_colname], self._origin_df[self._x_colname]))
+		res_h3 = self._origin_sdf.withColumn("h3", udf_to_h3(self._origin_sdf[self._y_colname], self._origin_sdf[self._x_colname]))
 		return res_h3
 	
 	def coord_to_pnu(self):
+		"""
+		Summary
+		-------
+		위경도 좌표가 포함된 원본 Spark DataFrame에 pnu 정보를 추가합니다.
+		
+		Usage
+		-------
+		>>> from sparkplus.core.sparkplus import CoordDataFrame
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_pnu()
+		"""
 		return self.pnu_df
 
-	def coord_to_zipcode(self):
+	def coord_to_zipcode(self):	
+		"""
+		Summary
+		-------
+		위경도 좌표가 포함된 원본 Spark DataFrame에 우편번호 정보를 추가합니다.
+		
+		Usage
+		-------
+		>>> from sparkplus.core.sparkplus import CoordDataFrame
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_zipcode()
+		"""
 		joined_df = self.joined_df.select("PNU", "zipcode")
 		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
 		return res_df
 
 	def coord_to_emd(self):
+		"""
+		Summary
+		-------
+		위경도 좌표가 포함된 원본 Spark DataFrame에 읍면동 코드 정보를 추가합니다.
+		
+		Usage
+		-------
+		>>> from sparkplus.core.sparkplus import CoordDataFrame
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_emd()
+		"""
 		joined_df= self.joined_df.select("PNU", "bupjungdong_code")
 		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
 		return res_df
 
-	def coord_to_doromyoung(self):
-		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "roadname", "is_basement", "building_primary_number", "building_secondary_number", "bupjungdong_code")
+	def coord_to_roadname(self):
+		"""
+		Summary
+		-------
+		위경도 좌표가 포함된 원본 Spark DataFrame에 도로명 주소 정보를 추가합니다.
+		
+		Usage
+		-------
+		>>> from sparkplus.core.sparkplus import CoordDataFrame
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_roadname()
+		"""
+		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "roadname", "eupmyeondong", "bupjunli", "is_basement", "building_primary_number", "building_secondary_number", "bupjungdong_code")
 		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
 		return res_df
 
 	def coord_to_jibun(self):
+		"""
+		Summary
+		-------
+		위경도 좌표가 포함된 원본 Spark DataFrame에 지번 주소 정보를 추가합니다.
+		
+		Usage
+		-------
+		>>> from sparkplus.core.sparkplus import CoordDataFrame
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_jibun()
+		"""
 		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "eupmyeondong", "bupjungli", "jibun_primary_number", "jibun_secondary_number")
 		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
 		return res_df
 
-	"""
-	def coord_to_zipcode2(self):
-		pnu_df = self.pnu_df
-		res_df = pnu_df.withColumn('zipcode', self.joined_df['zipcode'])
-		return res_df
-	"""
-
 	def join_with_table(self):
+		"""
+		Summary
+		-------
+		위경도 좌표가 포함된 원본 Spark DataFrame에 데이터베이스에서 가져온 Spark DataFrame 정보를 추가합니다.
+		
+		Usage
+		-------
+		>>> from sparkplus.core.sparkplus import CoordDataFrame
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.join_with_table()
+		"""
 		return self.joined_df
-
-	"""
-	def create_sjoin_pnu(self, join_column_name):
-		def sjoin_settlement(x, y):
-			gdf_temp = gpd.GeoDataFrame(
-				data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y)
-			).set_crs(epsg=4326, inplace=True)
-			settlement = gpd.sjoin(gdf_temp, self._gdf, how='left', op='within')
-			settlement = settlement.drop_duplicates(subset='geometry')
-
-			return (
-				settlement.agg({"PNU": lambda x: str(x)})
-				.reset_index()
-				.loc[:, join_column_name]
-				.astype("str")
-			)
-		return pandas_udf(sjoin_settlement, returnType=StringType())
-
-	def join_with_table(self):
-		temp_df = self.coord_to_pnu()
-		table_df = self._table.dropDuplicates(["bupjungdong_code"])
-		res_df = temp_df.join(
-			table_df, [temp_df.PNU[0:10] == table_df.bupjungdong_code], how='left_outer'
-		)
-		
-		return res_df
-	"""
-
-
-	"""
-	def coord_to_pnu(self):
-		sjoin_udf = self.create_sjoin_pnu("PNU")
-		res_df = self._origin_df.withColumn("PNU", sjoin_udf(self._origin_df[self._x_colname], self._origin_df[self._y_colname]))
-		
-		return res_df
-	"""
 
 
 """
