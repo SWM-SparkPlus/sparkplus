@@ -94,7 +94,7 @@ class RoadnameDataframe(object):
 
 			Example
 			-------
-			df.show()
+			>>> df.show()
 			+-------------------------------+
 			|                          split|
 			+-------------------------------+
@@ -102,7 +102,8 @@ class RoadnameDataframe(object):
 			|   	 [185-74, 경기도, 화성시...|
 			|      	  [[445-941], 경기, 화...|
 			+-------------------------------+
-			df.withColumn('split', cleanse_split(df.split))
+			
+			>>> df.withColumn('split', cleanse_split(df.split))
 			+--------------------------------+
 			|                           split|
 			+--------------------------------+
