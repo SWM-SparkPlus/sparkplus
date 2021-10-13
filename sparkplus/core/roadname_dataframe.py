@@ -141,7 +141,7 @@ class RoadnameDataframe(object):
 		"""
 		from udfs import extract_sigungu
 
-		self._df = self._df.withCOlumn("sigungu", extract_sigungu(self._df.split))
+		self._df = self._df.withColumn("sigungu", extract_sigungu(self._df.split))
 		return RoadnameDataframe(self._df)
 
 	def add_dong(self):
