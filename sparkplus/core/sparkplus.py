@@ -182,29 +182,23 @@ class CoordDataFrame(DataFrame):
 		"""
 		return self.joined_df
 
+class RoadnameDataFrame(DataFrame):
+	"""
+	Summary
+	-------
+	도로명주소가 포함된 Spark DataFrame에 법정읍면동, 지번주소, h3, 우편번호 정보를 추가합니다.
 
-"""
-class AddressTo
-	def address_to_h3(self, )
+	Args:
+		origin_sdf (Spark DataFrame):  도로명주소가 포함된 원본 Spark DataFrame
+		gdf (GeoDataFrame): shp Parquet으로부터 생성한 GeoDataFrame
+		tdf (Spark DataFrame): 데이터베이스로부터 생성한 Spark DataFrame
+		roadname_colname (String): 도로명주소 컬럼 이름
 
-	def coord_to_zip(self, gdf):
-		self.origin_df = self
+	Usage
+	-------
+	>>> from sparkplus.core.sparkplus import RoadnameDataFrame
+	>>> df = RoadnameDataFrame(origin_sdf, gdf, tdf, roadname_colname)
+	"""
 
-	def coord_to_emd(self, x_colname, y_colname):
-		self.origin_df = self
-
-	def coord_to_address(self):
-		self.origin_df = self
-	
-	def address_to_h3(self):
-		self.origin_df = self
-
-	def address_to_zip(self):
-		self.origin_df = self
-
-	def address_to_emd(self):
-		self.origin_df = self
-
-	def address_to_coord(self):
-		self.origin_df = self
-"""
+	def __init__(self, origin_sdf, gdf, tdf, roadname_colname):
+		pass
