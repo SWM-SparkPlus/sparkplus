@@ -27,3 +27,12 @@ def extract_sido(split):
 		elif sido_reverse_dictionary.get(data):
 			return data
 	return "None"
+
+@udf(StringType())
+def extract_sigungu(split):
+    for data in split:
+        if not sido_reverse_dictionary.get(data):
+            sigungu = data[-1]
+            if (sigungu == '시') or (sigungu == '군') or (sigungu == '구'):
+                return data
+    return "None"
