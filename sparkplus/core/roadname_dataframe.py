@@ -134,3 +134,12 @@ class RoadnameDataframe(object):
 
 		self._df = self._df.withColumn("sido", extract_sido(self._df.split))
 		return RoadnameDataframe(self._df)
+
+	def add_sigungu(self):
+		"""
+		시, 군, 구 컬럼을 기존 데이터프레임에 추가하는 함수입니다.
+		"""
+		from udfs import extract_sigungu
+
+		self._df = self._df.withCOlumn("sigungu", extract_sigungu(self._df.split))
+		return RoadnameDataframe(self._df)
