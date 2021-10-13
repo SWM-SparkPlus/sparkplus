@@ -45,7 +45,7 @@ sido_reverse_dictionary = dict(zip(sido_short_list, sido_long_list))
 
 @udf(IntegerType())
 def where_is_sido(split):
-    for i in enumerate(split):
+    for i in range(len(split)):
         if sido_dictionary.get(split[i]) or sido_reverse_dictionary.get(split[i]):
             return i
     return -1
