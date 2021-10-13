@@ -87,3 +87,10 @@ def extract_dong(split):
         if data[-1] == '동' and not data[0].isdigit():
             return data
     return "None"
+
+@udf(StringType())
+def extract_roadname(split):
+    for data in split:
+        if data[-1] == '로' or data[-1] == '길':
+            return data
+    return "None"

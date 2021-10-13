@@ -1,7 +1,7 @@
 from typing import Type
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import split
-from udfs import extract_sigungu, extract_dong, where_is_sido, cleanse_split, extract_sido, extract_eupmyeon
+from udfs import extract_sigungu, extract_dong, where_is_sido, cleanse_split, extract_sido, extract_eupmyeon,extract_roadname
 
 class RoadnameDataframe(object):
     """
@@ -151,4 +151,10 @@ class RoadnameDataframe(object):
 
         self._df = self._df.withColumn("dong", extract_dong(self._df.split))
         return RoadnameDataframe(self._df)
-    
+
+    def add_roadname(self):
+        """
+        데이터프레임에 도로명주소 컬럼을 추가하는 함수입니다.
+        """
+        self._df = self._df.withColumn("roadname", extract_roadname(self._df.split))
+        return RoadnameDataframe(self._df)
