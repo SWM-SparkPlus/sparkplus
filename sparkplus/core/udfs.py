@@ -56,6 +56,18 @@ def cleanse_split(idx, split):
         return split[idx:]
     return split
 
+@udf(ArrayType(StringType()))
+def process_roandname(split):
+    for i in range(len(split)):
+        data = split[i]
+        if data[-1].isdigit() and ('로' in data or '길' in data):
+            result_li = list()
+            for j in reversed(range(len(data))):
+                if not data[j].isdigit():
+                    result_li.append(data[:j+1]).append(data[j+1:])
+                    return split[:i] + result_li + split[i+1 :]
+    return split
+
 @udf(StringType())
 def extract_sido(split):
     for data in split:
