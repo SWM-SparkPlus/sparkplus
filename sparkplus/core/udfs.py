@@ -36,3 +36,10 @@ def extract_sigungu(split):
             if (sigungu == '시') or (sigungu == '군') or (sigungu == '구'):
                 return data
     return "None"
+
+@udf(StringType())
+def extract_dong(split):
+    for data in split:
+        if data[-1] == '동' and not data[0].isdigit():
+            return data
+    return "None"
