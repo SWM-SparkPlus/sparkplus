@@ -75,9 +75,15 @@ def extract_sigungu(split):
     return "None"
 
 @udf(StringType())
+def extract_eupmyeon(split):
+    for data in split:
+        if data[-1] == '읍' or data[-1] == '면':
+            return data
+    return "None"
+
+@udf(StringType())
 def extract_dong(split):
     for data in split:
         if data[-1] == '동' and not data[0].isdigit():
             return data
     return "None"
-    

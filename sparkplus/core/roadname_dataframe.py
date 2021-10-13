@@ -1,7 +1,7 @@
 from typing import Type
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import split
-from udfs import extract_sigungu, extract_dong, where_is_sido, cleanse_split, extract_sido
+from udfs import extract_sigungu, extract_dong, where_is_sido, cleanse_split, extract_sido, extract_eupmyeon
 
 class RoadnameDataframe(object):
     """
@@ -135,6 +135,13 @@ class RoadnameDataframe(object):
         """
 
         self._df = self._df.withColumn("sigungu", extract_sigungu(self._df.split))
+        return RoadnameDataframe(self._df)
+
+    def add_eupmyeon(self):
+        """
+        읍, 면 컬럼을 기존에 데이터프레임에 추가하는 함수입니다.
+        """
+        self._df = self._df.withColumn("eupmyeon", extract_eupmyeon(self._df.split))
         return RoadnameDataframe(self._df)
 
     def add_dong(self):
