@@ -18,3 +18,12 @@ def cleanse_split(idx, split):
 	if idx != -1:
 		return split[idx:]
 	return split
+
+@udf(StringType())
+def extract_sido(split):
+	for data in split:
+		if sido_dictionary.get(data):
+			return sido_dictionary[data]
+		elif sido_reverse_dictionary.get(data):
+			return data
+	return "None"
