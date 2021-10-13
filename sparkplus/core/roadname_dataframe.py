@@ -143,3 +143,13 @@ class RoadnameDataframe(object):
 
 		self._df = self._df.withCOlumn("sigungu", extract_sigungu(self._df.split))
 		return RoadnameDataframe(self._df)
+
+	def add_dong(self):
+		"""
+		데이터프레임에 동이 포함되어있는지 확인하고 동 컬럼을 추가하는 함수입니다.
+		"""
+		from udfs import extract_dong
+
+		self._df = self._df.withColumn("dong", extract_dong(self._df.split))
+		return RoadnameDataframe(self._df)
+	
