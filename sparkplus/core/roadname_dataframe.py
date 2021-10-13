@@ -119,3 +119,18 @@ class RoadnameDataframe(object):
 						.withColumn('split', cleanse_split(self.idx, self.split))
 		self._df = self._df.drop('idx')
 		return RoadnameDataframe(self._df)
+
+	def add_sido(self):
+		"""
+		특별시, 광역시, 도를 기존 컬럼에서 추가하는 함수입니다.
+
+		UDF
+		---
+		extract_sido : StringType
+			split 컬럼에서 특별시와 광역시, 도를 찾고 값을 반환합니다.
+			값이 없는 경우, "None" : str 을 반환합니다.
+		"""
+		from udfs import extract_sido
+
+		self._df = self._df.withColumn("sido", extract_sido(self._df.split))
+		return RoadnameDataframe(self._df)
