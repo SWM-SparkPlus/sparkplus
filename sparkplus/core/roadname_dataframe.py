@@ -122,7 +122,7 @@ class RoadnameDataframe(object):
 
 	def add_sido(self):
 		"""
-		특별시, 광역시, 도를 기존 컬럼에서 추가하는 함수입니다.
+		특별시, 광역시, 도를 기존 데이터프레임에 추가하는 함수입니다.
 
 		UDF
 		---
