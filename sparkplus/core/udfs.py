@@ -106,3 +106,16 @@ def extract_roadname(split):
         if data[-1] == '로' or data[-1] == '길':
             return data
     return "None"
+
+@udf(StringType())
+def extract_building_primary_number(split, roadname):
+    for i in range(len(split)):
+        if split[i - 1] == roadname:
+            data = split[i]
+            if data.isdigit():
+                return data
+            elif '-' in data:
+                for j in range(len(data)):
+                    if data[j] == '-': 
+                        return data[:j]
+    return "None"
