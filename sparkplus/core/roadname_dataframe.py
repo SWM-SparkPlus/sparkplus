@@ -59,6 +59,7 @@ class RoadnameDataframe(object):
 
     def cleanse_split_column(self):
         """
+        주소가 비정형 데이터일 경우 사용되는 함수이빈다.
         add_split_column 함수로 쪼개진 split 컬럼의 데이터를 전처리합니다
 
         UDF
