@@ -9,12 +9,18 @@ class RoadnameDataframe(object):
     def __init__(self, dataFrame: DataFrame):
         self._df = dataFrame
 
-    def roadname_to_bupjeongdong_code(self, target: str):
+    def roadname_bupjungdong_code(self, target: str, db_df:DataFrame):
         """
         도로명을 지번으로 변경하는 전 과정을 포함하는 함수입니다
         """
         self.add_split_column(target)
-        self.cleanse_split_column()
+        self.add_sido()
+        self.add_sigungu()
+        self.add_eupmyeon()
+        self.add_dong()
+        self.add_roadname()
+        self.add_building_primary_number()
+        self.join_with_db(db_df)
         return RoadnameDataframe(self._df)
 
     def add_split_column(self, target: str):
@@ -48,8 +54,6 @@ class RoadnameDataframe(object):
         |경기도 화성시 장안면 석포리                                        	       |[경기도, 화성시, 장안면, 석포리]                                         		         |
         +-----------------------------------------------------------------------+----------------------------------------------------------------------------------+
         """
-        if hasattr(self._df, target):
-            raise TypeError("Dataframe does not have" + str + "column")
         self._df = self._df.withColumn('split', split(self._df[target], ' '))
         return RoadnameDataframe(self._df)
 
