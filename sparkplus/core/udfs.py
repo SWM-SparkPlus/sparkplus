@@ -41,14 +41,7 @@ sido_long_list = [
         "제주특별자치도"
 ]
 sido_dictionary = dict(zip(sido_short_list, sido_long_list))
-sido_reverse_dictionary = dict(zip(sido_short_list, sido_long_list))
-
-@udf(IntegerType())
-def where_is_sido(split):
-    for i in range(len(split)):
-        if sido_dictionary.get(split[i]) or sido_reverse_dictionary.get(split[i]):
-            return i
-    return -1
+sido_reverse_dictionary = dict(zip(sido_long_list, sido_short_list))
 
 @udf(ArrayType(StringType()))
 def cleanse_split(idx, split):
@@ -79,11 +72,19 @@ def extract_sido(split):
 
 @udf(StringType())
 def extract_sigungu(split):
+    result = str()
+    flag = False
     for data in split:
         if not sido_reverse_dictionary.get(data):
             sigungu = data[-1]
             if (sigungu == '시') or (sigungu == '군') or (sigungu == '구'):
-                return data
+                if not flag:
+                    result += data
+                    flag = True
+                else:
+                    result += (" " + data)
+    if flag:
+        return result
     return "None"
 
 @udf(StringType())
