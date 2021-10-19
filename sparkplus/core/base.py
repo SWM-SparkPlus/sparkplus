@@ -138,8 +138,8 @@ class SPDataFrame(object):
 
         dfs = ss_read.option("dbtable", tablenames.pop()).load()
 
-        for tablename in tablenames:
-            dfs = dfs.union(ss_read.option("dbtable", tablename).load())
+        while tablenames:
+            dfs = dfs.union(ss_read.option("dbtable", tablenames.pop()).load())
 
         return dfs
 
