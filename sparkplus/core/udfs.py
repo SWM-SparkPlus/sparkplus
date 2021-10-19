@@ -43,6 +43,13 @@ sido_long_list = [
 sido_dictionary = dict(zip(sido_short_list, sido_long_list))
 sido_reverse_dictionary = dict(zip(sido_long_list, sido_short_list))
 
+@udf(IntegerType())
+def where_is_sido(split):
+    for i in range(len(split)):
+        if sido_dictionary.get(split[i]) or sido_reverse_dictionary.get(split[i]):
+            return i
+    return -1
+
 @udf(ArrayType(StringType()))
 def cleanse_split(idx, split):
     if idx != -1:
