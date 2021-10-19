@@ -1,6 +1,6 @@
 from typing import Type
 from pyspark.sql import DataFrame
-from pyspark.sql.functions import split
+from pyspark.sql.functions import split, col
 from udfs import *
 
 class RoadnameDataframe(object):
@@ -166,3 +166,19 @@ class RoadnameDataframe(object):
         """
         self._df = self._df.withColumn("building_primary_number", extract_building_primary_number(self._df.split, self._df.roadname))
         return RoadnameDataframe(self._df)
+    
+    def join_with_db(self, db_df):
+        """
+        데이터베이스 데이터프레임과 조인하는 함수입니다.
+        """
+        tmp_db_df = db_df.select( \
+                    col("sido").alias("db_sido"), \
+                    col("sigungu").alias("db_sigungu"), \
+                    col("eupmyeondong").alias("db_eupmyeondong"), \
+                    col("roadname").alias("db_roadname"), \
+                    col("building_primary_number").alias("db_building_primary_number"), \
+                    col("bupjungdong_code").alias("db_bupjungdong_code") \
+                    ) \
+                    .drop_duplicates(['db_roadname', 'db_building_primary_number'])
+
+        self._df = self._df.join(tmp_db_df, (self._df.sigungu == tmp_db_df.db_sigungu), 'left')
