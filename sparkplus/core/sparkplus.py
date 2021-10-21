@@ -35,7 +35,7 @@ def _join_with_table(table_df, pnu_df):
 	res_df = pnu_df.join(
 		table_df, [pnu_df.PNU[0:10] == table_df.bupjungdong_code], how='left_outer'
 	)
-	res_df = res_df.dropDuplicates(['PNU'])
+	#res_df = res_df.dropDuplicates(['PNU'])
 		
 	return res_df
 
@@ -82,6 +82,28 @@ class CoordDataFrame(DataFrame):
 		>>> from sparkplus.core.sparkplus import CoordDataFrame
 		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
 		>>> res_df = df.coord_to_h3(10)
+
+		Examples
+		-------
+		>>> origin_sdf.show()
+		+----------+--------+-----------+-----------+
+		|   가로등번호|  관할구청|        위도|        경도|
+		+----------+--------+-----------+-----------+
+		|   1001001|     중구|35.87343028|128.6103158|
+		|   1001002|     중구|35.87334197|128.6099071|
+		|   1001003|     중구|35.87327842|128.6096135|
+		+----------+--------+-----------+-----------+
+
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, '경도', '위도')
+		>>> res_df = df.coord_to_h3(10)
+		>>> res_df.show()
+		+----------+--------+-----------+-----------+---------------+
+		|	가로등번호|	 관할구청|        위도|        경도|             h3|
+		+----------+--------+-----------+-----------+---------------+
+		|   1001001|     중구|35.87343028|128.6103158|8a30c190311ffff|
+		|   1001002|     중구|35.87334197|128.6099071|8a30c190311ffff|
+		|   1001003|     중구|35.87327842|128.6096135|8a30c19031affff|
+		+----------+--------+-----------+-----------+---------------+
 		"""
 		udf_to_h3 = udf(
 		lambda x, y: h3.geo_to_h3(float(x), float(y), h3_level), returnType=StringType()
@@ -101,6 +123,28 @@ class CoordDataFrame(DataFrame):
 		>>> from sparkplus.core.sparkplus import CoordDataFrame
 		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
 		>>> res_df = df.coord_to_pnu()
+
+		Example
+		-------
+		>>> orgin_sdf.show()
+		+----------+--------+-----------+-----------+
+		|   가로등번호|  관할구청|        위도|        경도|
+		+----------+--------+-----------+-----------+
+		|   1001001|     중구|35.87343028|128.6103158|
+		|   1001002|     중구|35.87334197|128.6099071|
+		|   1001003|     중구|35.87327842|128.6096135|
+		+----------+--------+-----------+-----------+
+
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, '경도', '위도')
+		>>> res_df = df.coord_to_pnu()
+		>>> res_df.show()
+		+----------+--------+-----------+-----------+-------------------+               
+		|	가로등번호|	 관할구청|        위도|        경도|                PNU|
+		+----------+--------+-----------+-----------+-------------------+
+		|   1001001|     중구|35.87343028|128.6103158|2711010300103670054|
+		|   1001002|     중구|35.87334197|128.6099071|2711010300103670054|
+		|   1001003|     중구|35.87327842|128.6096135|2711010300103670054|
+		+----------+--------+-----------+-----------+-------------------+
 		"""
 		return self.pnu_df
 
@@ -115,25 +159,72 @@ class CoordDataFrame(DataFrame):
 		>>> from sparkplus.core.sparkplus import CoordDataFrame
 		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
 		>>> res_df = df.coord_to_zipcode()
+
+		Example
+		-------
+		>>> origin_sdf.show()
+		+----------+--------+-----------+-----------+
+		|   가로등번호|  관할구청|        위도|        경도|
+		+----------+--------+-----------+-----------+
+		|   1001001|     중구|35.87343028|128.6103158|
+		|   1001002|     중구|35.87334197|128.6099071|
+		|   1001003|     중구|35.87327842|128.6096135|
+		+----------+--------+-----------+-----------+
+
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, '경도', '위도')
+		>>> res_df = df.coord_to_zipcode()
+		>>> res_df.show()
+		+----------+--------+-----------+-----------+-------+                           
+		|	가로등번호|	 관할구청|        위도|        경도|zipcode|
+		+----------+--------+-----------+-----------+-------+
+		|   8155012|   달성군|35.64103224|128.4106523|  43013|
+		|   8071024|   달성군|35.66091032|128.4159519|  43006|
+		|   8213007|   달성군| 35.6320721|128.4175234|  43013|
+		+----------+--------+-----------+-----------+-------+                           
+
 		"""
 		joined_df = self.joined_df.select("PNU", "zipcode")
-		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop("PNU")
+		res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
 		return res_df
 
 	def coord_to_emd(self):
 		"""
 		Summary
 		-------
-		위경도 좌표가 포함된 원본 Spark DataFrame에 읍면동 코드 정보를 추가합니다.
+		위경도 좌표가 포함된 원본 Spark DataFrame에 법정읍면동 코드 정보를 추가합니다.
 		
 		Usage
 		-------
 		>>> from sparkplus.core.sparkplus import CoordDataFrame
 		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
 		>>> res_df = df.coord_to_emd()
+
+		Example
+		-------
+		>>> origin_sdf.show()
+		+----------+--------+-----------+-----------+
+		|   가로등번호|  관할구청|        위도|        경도|
+		+----------+--------+-----------+-----------+
+		|   1001001|     중구|35.87343028|128.6103158|
+		|   1001002|     중구|35.87334197|128.6099071|
+		|   1001003|     중구|35.87327842|128.6096135|
+		+----------+--------+-----------+-----------+
+
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, '경도', '위도')
+		>>> res_df = df.coord_to_emd()
+		>>> res_df.show()
+		+----------+--------+-----------+-----------+----------------+
+		|	가로등번호|	 관할구청|        위도|        경도|bupjungdong_code|
+		+----------+--------+-----------+-----------+----------------+
+		|   1001001|     중구|35.87343028|128.6103158|      2711010300|
+		|   1001002|     중구|35.87334197|128.6099071|      2711010300|
+		|   1001003|     중구|35.87327842|128.6096135|      2711010300|
+		+----------+--------+-----------+-----------+----------------+
 		"""
 		joined_df= self.joined_df.select("PNU", "bupjungdong_code")
-		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop('PNU')
+		res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
 		return res_df
 
 	def coord_to_roadname(self):
@@ -147,9 +238,33 @@ class CoordDataFrame(DataFrame):
 		>>> from sparkplus.core.sparkplus import CoordDataFrame
 		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
 		>>> res_df = df.coord_to_roadname()
+
+		Example
+		-------
+		>>> origin_sdf.show()
+		+----------+--------+-----------+-----------+
+		|   가로등번호|  관할구청|        위도|        경도|
+		+----------+--------+-----------+-----------+
+		|   1001001|     중구|35.87343028|128.6103158|
+		|   1001002|     중구|35.87334197|128.6099071|
+		|   1001003|     중구|35.87327842|128.6096135|
+		+----------+--------+-----------+-----------+
+
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_roadname()
+		>>> res_df.show()
+		+----------+--------+-----------+-----------+----------+-------+-------------+------------+---------+-----------+-----------------------+-------------------------+
+		|	가로등번호|	 관할구청|        위도|        경도|      sido|sigungu|     roadname|eupmyeondong|bupjungli|is_basement|building_primary_number|building_secondary_number|
+		+----------+--------+-----------+-----------+----------+-------+-------------+------------+---------+-----------+-----------------------+-------------------------+
+		|   1001001|     중구|35.87343028|128.6103158|	 대구광역시|   중구|   	  동덕로38길|     동인동3가|         |          0|                    100|                        0|     
+		|   1001002|     중구|35.87334197|128.6099071|	 대구광역시|   중구|   	  동덕로38길|  	  동인동3가|         |          0|                    100|                        0|     
+		|   1001003|     중구|35.87327842|128.6096135|	 대구광역시|   중구|   	  동덕로38길|  	  동인동3가|         |          0|                    100|                        0|     
+		+----------+--------+-----------+-----------+----------+-------+-------------+------------+---------+-----------+-----------------------+-------------------------+
+
 		"""
-		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "roadname", "eupmyeondong", "bupjunli", "is_basement", "building_primary_number", "building_secondary_number", "bupjungdong_code")
-		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
+		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "roadname", "eupmyeondong", "bupjungli", "is_basement", "building_primary_number", "building_secondary_number")
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop('PNU')
+		res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
 		return res_df
 
 	def coord_to_jibun(self):
@@ -163,9 +278,32 @@ class CoordDataFrame(DataFrame):
 		>>> from sparkplus.core.sparkplus import CoordDataFrame
 		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
 		>>> res_df = df.coord_to_jibun()
+
+		Example
+		-------
+		>>> origin_sdf.show()
+		+----------+--------+-----------+-----------+
+		|   가로등번호|  관할구청|        위도|        경도|
+		+----------+--------+-----------+-----------+
+		|   1001001|     중구|35.87343028|128.6103158|
+		|   1001002|     중구|35.87334197|128.6099071|
+		|   1001003|     중구|35.87327842|128.6096135|
+		+----------+--------+-----------+-----------+
+
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_jibun()
+		>>> res_df.show()
+		+----------+--------+-----------+-----------+----------+-------+------------+---------+--------------------+----------------------+
+		|	가로등번호|	 관할구청|        위도|        경도|      sido|sigungu|eupmyeondong|bupjungli|jibun_primary_number|jibun_secondary_number|
+		+----------+--------+-----------+-----------+----------+-------+------------+---------+--------------------+----------------------+
+		|   1001001|     중구|35.87343028|128.6103158|   대구광역시|    중구|     동인동3가|         |                 192|                    79|
+		|   1001002|     중구|35.87334197|128.6099071|   대구광역시|    중구|     동인동3가|         |                 192|                    79|
+		|   1001003|     중구|35.87327842|128.6096135|   대구광역시|    중구|     동인동3가|         |                 192|                    79|
+		+----------+--------+-----------+-----------+----------+-------+------------+---------+--------------------+----------------------+
 		"""
 		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "eupmyeondong", "bupjungli", "jibun_primary_number", "jibun_secondary_number")
-		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter")
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop('PNU')
+		res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
 		return res_df
 
 	def join_with_table(self):
@@ -179,6 +317,29 @@ class CoordDataFrame(DataFrame):
 		>>> from sparkplus.core.sparkplus import CoordDataFrame
 		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
 		>>> res_df = df.join_with_table()
+
+		Example
+		-------
+		>>> origin_sdf.show()
+		+----------+--------+-----------+-----------+
+		|   가로등번호|  관할구청|        위도|        경도|
+		+----------+--------+-----------+-----------+
+		|   1001001|     중구|35.87343028|128.6103158|
+		|   1001002|     중구|35.87334197|128.6099071|
+		|   1001003|     중구|35.87327842|128.6096135|
+		+----------+--------+-----------+-----------+
+
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, '경도', '위도')
+		>>> res_df = df.join_with_table()
+		>>> res_df.show()
+		+----------+--------+-----------+-----------+-------------------+--------------------+-------------+-------+----------+-------+------------+---------+---------------+-----------+-----------------------+-------------------------+--------------------+----------------------+----------------+
+		|	가로등번호|	 관할구청|        위도|        경도|                PNU|       manage_number|roadname_code|zipcode|      sido|sigungu|eupmyeondong|bupjungli|       roadname|is_basement|building_primary_number|building_secondary_number|jibun_primary_number|jibun_secondary_number|bupjungdong_code|
+		+----------+--------+-----------+-----------+-------------------+--------------------+-------------+-------+----------+-------+------------+---------+---------------+-----------+-----------------------+-------------------------+--------------------+----------------------+----------------+
+		|   1065002|     중구|35.86341579|128.6024286|2711010600101990000|27110106001000300...| 271103007017|  41940|	대구광역시|    중구|   	 삼덕동2가|         |           공평로|          0|                     46|                        0|                   3|                     4|      2711010600|
+		|   1063002|     중구|35.86516734|128.6105401|2711010700103790000|27110107001003100...| 271104223055|  41945| 	대구광역시|    중구|   	 삼덕동3가|         |	 달구벌대로443길|          0|                     62|                       16|                  31|                     2|      2711010700|
+		|   1024017|     중구|35.86927185|128.5937782|2711011700101200003|27110115001008500...| 271102007001|  41909|	대구광역시|    중구|        남일동|         |         중앙대로|          1|                    424|                        0|                 143|                     1|      2711011700|
+		+----------+--------+-----------+-----------+-------------------+--------------------+-------------+-------+----------+-------+------------+---------+---------------+-----------+-----------------------+-------------------------+--------------------+----------------------+----------------+
+
 		"""
 		return self.joined_df
 

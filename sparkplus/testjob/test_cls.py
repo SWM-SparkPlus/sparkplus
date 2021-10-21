@@ -51,6 +51,8 @@ my_sdf = (
         .format("csv")
         .load(data_path, encoding="euc-kr")
 )
+my_sdf.show()
+print('my_sdf: ', my_sdf.count())
 logger.debug('complete dataframe')
 
 # 데이터베이스에서 테이블을 불러온다.
@@ -66,6 +68,7 @@ logger.debug('complete custom df')
 logger.debug('coord_to_pnu')
 pnu_df = df.coord_to_pnu()
 
+print("pnu_df: ", pnu_df.count())
 pnu_df.show()
 
 logger.debug('complete coord_to_pnu')
@@ -81,28 +84,36 @@ logger.debug('complete join with pnu')
 # 기존 데이터 df와 테이블을 조인한다. (PNU => bupjungdong 매칭)
 logger.debug('join_with_table')
 res_df = df.join_with_table()
+print('joined_df: ', res_df.count())
 res_df.show()
 logger.debug('complete join_with_tables')
 
 logger.debug('h3_df')
 h3_df = df.coord_to_h3(10)
+print('h3_df: ', h3_df.count())
 h3_df.show()
 logger.debug('complete h3_df')
 
 logger.debug('select zipcode columns')
 zipcode_df = df.coord_to_zipcode()
+print('zipcode_df: ', zipcode_df.count())
+
 zipcode_df.show()
 logger.debug('complete select zip columns')
 
 
 logger.debug('select emd columns')
 emd_df = df.coord_to_emd()
+print('emd_df: ', emd_df.count())
+
 emd_df.show()
 logger.debug('complete select emd columns')
 
 
 logger.debug('select doromyoung columns')
 doro_df = df.coord_to_roadname()
+print('doro_df: ', doro_df.count())
+
 doro_df.show()
 logger.debug('complete select doromyoung columns')
 
@@ -110,5 +121,7 @@ logger.debug('complete select doromyoung columns')
 
 logger.debug('select jibun columns')
 jibun_df = df.coord_to_jibun()
+print('jibun_df: ', jibun_df.count())
+
 jibun_df.show()
 logger.debug('complete select jibun columns')
