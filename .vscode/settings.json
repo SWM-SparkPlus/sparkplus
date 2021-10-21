@@ -1,4 +1,13 @@
 {
+  "python.pythonPath": "/usr/bin/python",
+  "python.linting.pylintPath": "/usr/local/bin/pylint",
   "python.linting.pylintEnabled": true,
-  "python.linting.enabled": true
+  "python.linting.enabled": true,
+  "python.linting.pylintArgs": [
+    "--init-hook",
+    "import sys; sys.path.append('/Users/lee/Desktop/spark-plugin/sparkplus/core')"
+  ],
+  "files.watcherExclude": {
+    "**/target": true
+  }
 }

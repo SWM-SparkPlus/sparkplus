@@ -1,3 +1,3 @@
 from .sparkplus import *
 
-__all__ = ["CustomDataFrame"]
+__all__ = ["CoordDataFrame"]
