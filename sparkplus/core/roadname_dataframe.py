@@ -8,6 +8,7 @@ class RoadnameDataframe(object):
     """
     def __init__(self, dataFrame: DataFrame):
         self._df = dataFrame
+        self._tmp_df = dataFrame
 
     def roadname_bupjungdong_code(self, target: str, db_df:DataFrame):
         """
@@ -372,7 +373,8 @@ class RoadnameDataframe(object):
 
         tmp_df = self._df.join(tmp_db_df, (self._df.sigungu == tmp_db_df.db_sigungu) & (self._df.roadname == tmp_db_df.db_roadname) & (self._df.building_primary_number == tmp_db_df.db_building_primary_number), 'inner')
         tmp_df = tmp_df.withColumnRenamed("db_bupjungdong_code", "bupjungdong_code")
-        self._df = tmp_df.select("순번", "구분명", "집화일자", "집배일자", "운임명", "수량(BOX)", "운임", "집화여부", "집배시간", "배달일자", "장비구분", "품목", "SM명", "수신자주소", "bupjungdong_code")
+        self._df = tmp_df.select(self._tmp_df['*'], "bupjungdong_code")
+        del self._tmp_df
         del tmp_df
 
         return RoadnameDataframe(self._df)
