@@ -1,5 +1,6 @@
-from typing import List
+from typing import List, Union
 from pyspark.sql.session import SparkSession
+
 
 class SPDataFrame(object):
     """
@@ -11,7 +12,7 @@ class SPDataFrame(object):
     # TODO: tablenames를 List[ESido] 또는 테이블명을 가진 List 형태로 변경
     @classmethod
     def get_db_df_by_tablenames(
-        cls, sparkSession: SparkSession, tablenames: List[str], **kwargs
+        cls, sparkSession: SparkSession, tablenames: Union[str, List[str]], **kwargs
     ):
         """
         Summary
@@ -91,9 +92,12 @@ class SPDataFrame(object):
         for opt_key, opt_val in kwargs.items():
             ss_read.option(opt_key, opt_val)
 
-        dfs = ss_read.option("dbtable", tablenames.pop()).load()
+        if isinstance(tablenames, str):
+            return ss_read.option("dbtable", tablenames).load()
+        else:
+            dfs = ss_read.option("dbtable", tablenames.pop()).load()
 
-        while tablenames:
-            dfs = dfs.union(ss_read.option("dbtable", tablenames.pop()).load())
+            while tablenames:
+                dfs = dfs.union(ss_read.option("dbtable", tablenames.pop()).load())
 
-        return dfs
+            return dfs
