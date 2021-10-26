@@ -1,7 +1,7 @@
 from geopandas.geodataframe import GeoDataFrame
 from pyspark.sql.functions import lit, udf, pandas_udf
 from pyspark.sql import DataFrame
-from pyspark.sql import types
+from pyspark.sql.types import *
 
 import geopandas as gpd
 import h3
@@ -36,6 +36,23 @@ def _join_with_table(table_df, pnu_df):
 	#res_df = res_df.dropDuplicates(['PNU'])
 		
 	return res_df
+
+@udf(StringType())
+def get_fullname(a, b, c, d):
+	if a == None and b == None and c == None and d == None:
+		return None 
+
+	if a == None:
+		a = ''
+	if b == None:
+		b = ''
+	if c == None:
+		c = ''
+	if d == None:
+		d = ''
+	res = str(a) + ' ' + str(b) + ' ' + str(c) + ' ' + str(d)
+
+	return res
 
 class CoordDataFrame(DataFrame):
 	"""
@@ -265,6 +282,47 @@ class CoordDataFrame(DataFrame):
 		res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
 		return res_df
 
+	def coord_to_roadname_addr(self):
+		"""
+		Summary
+		-------
+		위경도 좌표가 포함된 원본 Spark DataFrame에 도로명 주소 정보를 추가합니다.
+		
+		Usage
+		-------
+		>>> from sparkplus.core.sparkplus import CoordDataFrame
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_roadname()
+
+		Example
+		-------
+		>>> origin_sdf.show()
+		+----------+--------+-----------+-----------+
+		|   가로등번호|  관할구청|        위도|        경도|
+		+----------+--------+-----------+-----------+
+		|   1001001|     중구|35.87343028|128.6103158|
+		|   1001002|     중구|35.87334197|128.6099071|
+		|   1001003|     중구|35.87327842|128.6096135|
+		+----------+--------+-----------+-----------+
+
+		>>> df = CoordDataFrame(origin_sdf, gdf, tdf, 'lon', 'lat')
+		>>> res_df = df.coord_to_roadname()
+		>>> res_df.show()
+		+----------+--------+-----------+-----------+----------+-------+-------------+------------+---------+-----------+-----------------------+-------------------------+
+		|	가로등번호|	 관할구청|        위도|        경도|      sido|sigungu|     roadname|eupmyeondong|bupjungli|is_basement|building_primary_number|building_secondary_number|
+		+----------+--------+-----------+-----------+----------+-------+-------------+------------+---------+-----------+-----------------------+-------------------------+
+		|   1001001|     중구|35.87343028|128.6103158|	 대구광역시|   중구|   	  동덕로38길|     동인동3가|         |          0|                    100|                        0|     
+		|   1001002|     중구|35.87334197|128.6099071|	 대구광역시|   중구|   	  동덕로38길|  	  동인동3가|         |          0|                    100|                        0|     
+		|   1001003|     중구|35.87327842|128.6096135|	 대구광역시|   중구|   	  동덕로38길|  	  동인동3가|         |          0|                    100|                        0|     
+		+----------+--------+-----------+-----------+----------+-------+-------------+------------+---------+-----------+-----------------------+-------------------------+
+
+		"""
+		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "roadname", "eupmyeondong", "bupjungli", "is_basement", "building_primary_number", "building_secondary_number")
+		joined_df = joined_df.withColumn("roadname_address", get_fullname(joined_df['sido'], joined_df['sigungu'], joined_df['roadname'], joined_df['building_primary_number']))
+		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop('PNU')
+		res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
+		return res_df
+    			
 	def coord_to_jibun(self):
 		"""
 		Summary
