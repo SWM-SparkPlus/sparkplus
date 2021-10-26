@@ -124,7 +124,7 @@ class RoadnameDataFrame(object):
             "split", cleanse_split(self._df.idx, self._df.split)
         )
         self._df = self._df.drop("idx")
-        self._df = self._df.withColumn("split", process_roandname(self._df.split))
+        self._df = self._df.withColumn("split", process_roadname(self._df.split))
         return RoadnameDataFrame(self._df)
 
     def add_sido(self):
