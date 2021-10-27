@@ -3,81 +3,77 @@ Spark+는 H3, 위/경도 좌표 등의 공간 정보를 국내 주소체계(신�
 
 Spark+는 Apache Spark와 MySQL을 지원합니다.
 
-### dependecnies
-- spark
-   - `start_spark(app_name, master, jar_packages, files, spark_config)`
-      ```
-      from dependecnies.spark import start_spark
+## Setup
+---
+Spark+는 Pypi에 배포되어 있으며, 다음 커맨드로 설치할 수 있습니다.
+```
+pip install sparkplus
+```
 
-      spark, *_ = start_spark
-      ```
-      - spark session을 시작합니다.
-      - params
-         - app_name: str, 어플리케이션 이름(default: my_spark_app)
-         - master: str, master 노드(default: local[*])
-         - jar_packages: list, Spark Jar package 이름
-         - files: list, Spark Cluster(master/worker)로 전송할 파일
-         - spark_config: dict, config key-value pairs
-      - return
-         - Spark session
-         - logger
-         - config dict
+## Usage
+---
+```
+from sparkplus.core import CoordDataframe, RoadnameDataframe
+```
+### CoordDataframe
+```
+df = CoordDataframe(source_df, gdf, table_df, x_colname, y_colname)
+```
+- params
+  - source_df: 위/경도 좌표를 포함한 원본 Spark Dataframe
+  - gdf: `shp`, `parquet` 로부터 생성한 Geo Dataframe
+  - table_df: 주소 데이터베이스로부터 생성한 Spark Dataframe
+  - x_colname, y_colname: 원본 Spark Dataframe의 위/경도 좌표
 
-- logging
-   - `Log4j(object: spark session)`
+**coord_to_pnu()**
+```
+df.coord_to_pnu()
+```
+- 해당 좌표를 포함하는 PNU코드 컬럼 추가
+
+**coord_to_h3()**
+```
+df.coord_to_h3()
+```
+- 해당 좌표를 포함하는 h3 컬럼 추가
+
+**coord_to_zipcode()**
+```
+df.coord_to_zipcode()
+```
+- 해당 좌표를 포함하는 우편번호 컬럼 추가
+
+**coord_to_emd()**
+```
+df.coord_to_emd()
+```
+- 해당 좌표를 포함하는 법정동코드 컬럼 추가
+
+**coord_to_roadname()**
+```
+df.coord_to_roadname()
+```
+- 해당 좌표를 포함하는 도로명 주소(시도, 시군구, 도로명, 읍면동, 법정리, 지하여부, 건물번호 1, 건물번호 2) 컬럼 추가
+
+**coord_to_roadname_addr()**
+```
+df.coord_to_roadname_addr()
+```
+- 해당 좌표를 포함하는 전체 도로명 주소 컬럼 추가
+
+**coord_to_jibun()**
+```
+df.coord_to_jibun()
+```
+- 해당 좌표를 포함하는 지번주소(시도, 시군구, 읍면동, 법정리, 지번 1, 지번 2) 컬럼 추가
+
+**join_with_table()**
+```
+df.join_with_table()
+```
+- 원본 소스 데이터프레임과 주소 데이터베이스에서 가져온 테이블 조인
 
 
-### jobs
-- load_database
-   - `load_tables(spark, url, user, password, driver, opt)`
-      ```
-      from jobs.load_tables import load_tables
+### RoadnameDataframe
+---
 
-      driver = "driver"
-      url = "url"
-      user = "user"
-      password = "password"
-      opt = "seoul"
-
-      df = load_tables(spark, url, user, password, driver, opt)
-      df.show()
-      ```
-      - 데이터베이스에서 테이블을 불러옵니다
-      - params
-         - spark: obj, spark session
-         - url: str, db url
-         - user: str, db user
-         - password: str, db password
-         - driver: str, mysql driver(default: "com.mysql.cj.jdbc.Driver"
-         - opt: str, 불러올 테이블 지역(default: "all")
-- conversion
-  - `join_with_emd(shp_gdf, spark_df, x_colname, y_colname)`
-    - params
-      - shp_gdf: geo-dataframe으로 불러온 shp
-      - spark_df: 위/경도 좌표를 포함하는 spark-dataframe
-      - x_colname: 경도 column name, str
-      - y_colname: 위도 column name, str
-    - return
-      - 위/경도 좌표와 법정동 코드가 맵핑된 spark-dataframe
-  - `join_with_h3(spark_df, x_colname, y_colname, h3_level)`
-    - params
-      - spark_df: 위/경도 좌표를 포함하는 spark-dataframe
-      - x_colname: 경도 column name, str
-      - y_colname: 위도 column name, str
-      - h3_level: h3 레벨, int
-    - return
-      - 위/경도 좌표와 h3 정보가 맵핑된 spark-dataframe
-  - `join_with_table(shp_gdf, spark_df, table_df, x_colname, y_colname)`
-    - params
-      - shp_gdf: geo-dataframe으로 불러온 shp
-      - spark_df: 위/경도 좌표를 포함하는 spark-dataframe
-      - table_df: 주소데이터베이스에서 불러온 지역별 통합 테이블 spark-dataframe
-      - x_colname: 경도 column name, str
-      - y_colname: 위도 column name, str
-    - return
-      - 위/경도 좌표와 법정동 코드, 주소정보가 맵핑된 spark-dataframe
-
-### package
-- /gis
-   - `gis_init()`
-   - `coord_to_dong(spark, gdf, spark_df, lng_colname, lat_colname)`
