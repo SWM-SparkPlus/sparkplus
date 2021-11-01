@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__)))))
 
-from sparkplus.core import CoordDataFrame
+from sparkplus.core import CoordDataframe
 from sparkplus.core import RoadnameDataframe
 from sparkplus.jobs.load_database import load_tables
 from pyspark.sql import SparkSession
@@ -63,7 +63,7 @@ table_df.show()
 logger.debug('complete load_tables')
 # 커스텀데이터프레임을 만든다.
 logger.debug('create custom df')
-df = CoordDataFrame(my_sdf, gdf, table_df, '경도', '위도')
+df = CoordDataframe(my_sdf, gdf, table_df, '경도', '위도')
 logger.debug('complete custom df')
 # 기존 데이터 df와 PNU 매칭한다.
 logger.debug('coord_to_pnu')
@@ -119,6 +119,8 @@ doro_df.show()
 logger.debug('complete select doromyoung columns')
 
 
+
+
 logger.debug('coord_to_roadname')
 full_doro_df = df.coord_to_roadname_addr()
 
@@ -129,6 +131,12 @@ doro_to_roadname_df = full_doro_df.add_split('roadname_address')
 print('doro_to_roadname', doro_to_roadname_df._df.count())
 doro_to_roadname_df._df.show()
 logger.debug('complete coord_to_roadname')
+
+
+join_with_db_df = doro_to_roadname_df.join_with_db(table_df)
+print('join_doro_to_roadname')
+join_with_db_df._df.show()
+logger.debug('complete join')
 
 
 logger.debug('select jibun columns')

@@ -54,7 +54,7 @@ def get_fullname(a, b, c, d):
 
 	return res
 
-class CoordDataFrame(DataFrame):
+class CoordDataframe(DataFrame):
 	"""
 	Summary
 	-------
@@ -357,7 +357,7 @@ class CoordDataFrame(DataFrame):
 		|   1001003|     중구|35.87327842|128.6096135|   대구광역시|    중구|     동인동3가|         |                 192|                    79|
 		+----------+--------+-----------+-----------+----------+-------+------------+---------+--------------------+----------------------+
 		"""
-		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "eupmyeondong", "bupjungli", "jibun_primary_number", "jibun_secondary_number")
+		joined_df= self.joined_df.select("PNU", "sido", "sigungu", "eupmyeondong", "bupjungli", "is_mountain", "jibun_primary_number", "jibun_secondary_number")
 		res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop('PNU')
 		res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
 		return res_df

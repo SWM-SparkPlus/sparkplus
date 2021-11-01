@@ -1,7 +1,7 @@
 from typing import List
 from pyspark.sql.session import SparkSession
 
-class SPDataFrame(object):
+class SPDataframe(object):
     """
     요약
     -------

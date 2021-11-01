@@ -1,6 +1,6 @@
 from .dependencies import spark
 from .jobs import conversion
 from .package import gis
-from .core import CoordDataFrame, RoadnameDataframe
+from .core import CoordDataframe, RoadnameDataframe, SPDataframe
 
-__all__ = ["spark", "conversion", "gis", "sparkplus"]
+__all__ = ["spark", "CoordDataframe", "RoadnameDataframe", "SPDataframe"]
