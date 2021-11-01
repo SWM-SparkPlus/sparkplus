@@ -1,7 +1,8 @@
-from typing import List
+from typing import List, Union
 from pyspark.sql.session import SparkSession
 
-class SPDataframe(object):
+
+class SPDataFrame(object):
     """
     요약
     -------
@@ -11,7 +12,7 @@ class SPDataframe(object):
     # TODO: tablenames를 List[ESido] 또는 테이블명을 가진 List 형태로 변경
     @classmethod
     def get_db_df_by_tablenames(
-        cls, sparkSession: SparkSession, tablenames: List[str], **kwargs
+        cls, sparkSession: SparkSession, tablenames: Union[str, List[str]], **kwargs
     ):
         """
         Summary
@@ -65,23 +66,31 @@ class SPDataframe(object):
         """
         sess_conf = sparkSession.sparkContext.getConf().getAll()
 
-        # If SparkConf doesn't have MySQL driver, raise `ValueError`
+        # If SparkConf doesn't contain MySQL connector, raise `ValueError`
         jdbc_driver_flag = False
+
+        # If you use `spark.jars.packages`, value should like `mysql:mysql-connector-java:YOUR_MYSQL_VERSION`
+        available_configs = [
+            "spark.jars",
+            "spark.driver.extraClassPath",
+            "spark.jars.packages",
+        ]
+
         for (conf_key, conf_val) in sess_conf:
-            if conf_key == "spark.driver.extraClassPath" and conf_val.__contains__(
-                "mysql"
-            ):
+            if conf_key in available_configs and conf_val.__contains__("mysql"):
                 jdbc_driver_flag = True
                 break
 
         if not jdbc_driver_flag:
             raise ValueError(
-                "[SPARKPLUS_EXTRA_JAR_ERR] "
-                "Your Spark session seems that it doesn't contains extra class path for mysql connector. "
-                "Please specify to use SparkPlus package properly.\n\n"
-                "$ spark-submit <your-spark-app> --extra-class-path <mysql-jar-path>"
-                "\n\nIn programming way, set spark conf like\n\n"
-                ">>> ss = SparkSession.builder.config('spark.driver.extraClassPath', MYSQL_JAR_PATH)\n\n"
+                "[SPARKPLUS_MYSQL_CONNECTOR_ERR] "
+                "Your spark session seems like it doesn't contains mysql-connector-java path to connect mysql database. "
+                "Please specify it to use SparkPlus package properly.\n\n"
+                "$ spark-submit <your-spark-app> --jars <mysql-jar-path>\n\n"
+                "In programming way, if you have mysql-connector jar file locally, set spark configuration like\n\n"
+                ">>> ss = SparkSession.builder.config('spark.jars', MYSQL_JAR_PATH)\n\n"
+                "or if you don't,\n\n"
+                ">>> ss = SparkSession.builder.config('spark.jars.packages', 'mysql:mysql-connector-java:YOUR_MYSQL_VERSION')\n\n"
                 "Check https://spark.apache.org/docs/latest/configuration.html for detail."
             )
 
@@ -91,9 +100,12 @@ class SPDataframe(object):
         for opt_key, opt_val in kwargs.items():
             ss_read.option(opt_key, opt_val)
 
-        dfs = ss_read.option("dbtable", tablenames.pop()).load()
+        if isinstance(tablenames, str):
+            return ss_read.option("dbtable", tablenames).load()
+        else:
+            dfs = ss_read.option("dbtable", tablenames.pop()).load()
 
-        while tablenames:
-            dfs = dfs.union(ss_read.option("dbtable", tablenames.pop()).load())
+            while tablenames:
+                dfs = dfs.union(ss_read.option("dbtable", tablenames.pop()).load())
 
-        return dfs
+            return dfs
