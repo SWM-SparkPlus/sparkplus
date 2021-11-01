@@ -17,6 +17,7 @@ class RoadnameDataFrame(object):
 
     def __init__(self, dataFrame: DataFrame):
         self._df = dataFrame
+        self._tmp_df = dataFrame
 
     def roadname_bupjungdong_code(self, target: str, db_df: DataFrame):
         """
