@@ -1,20 +1,24 @@
 import sys
 import os
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__)))))
+
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+)
 
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import split, col
 from sparkplus.core.udfs import *
 
-class RoadnameDataframe(object):
+
+class RoadnameDataFrame(object):
     """
     도로명 주소를 활용하여 데이터를 분석하기 위한 클래스입니다
     """
+
     def __init__(self, dataFrame: DataFrame):
         self._df = dataFrame
-        self._tmp_df = dataFrame
 
-    def roadname_bupjungdong_code(self, target: str, db_df:DataFrame):
+    def roadname_bupjungdong_code(self, target: str, db_df: DataFrame):
         """
         도로명을 지번으로 변경하는 전 과정을 포함하는 함수입니다
         """
@@ -26,7 +30,7 @@ class RoadnameDataframe(object):
         self.add_roadname()
         self.add_building_primary_number()
         self.join_with_db(db_df)
-        return RoadnameDataframe(self._df)
+        return RoadnameDataFrame(self._df)
 
     def add_split(self, target: str):
         """
@@ -59,8 +63,8 @@ class RoadnameDataframe(object):
         |경기도 화성시 장안면 석포리         |[경기도, 화성시, 장안면, 석포리]           |
         +-----------------------------+------------------------------------+
         """
-        self._df = self._df.withColumn('split', split(self._df[target], ' '))
-        return RoadnameDataframe(self._df)
+        self._df = self._df.withColumn("split", split(self._df[target], " "))
+        return RoadnameDataFrame(self._df)
 
     def cleanse_split_column(self):
         """
@@ -91,7 +95,7 @@ class RoadnameDataframe(object):
             |[경기도, 화성시, 장안면, 버들로]                   |   0|
             |[경기도, 화성시, 장안면, 석포리]                   |   2|
             +--------------------------------------------+----+
-            
+
         cleanse_split: ArrayType(StringType)
             split 컬럼과 인덱스 컬럼을 활용하여 알맞은 주소체계 값으로 반환합니다.
 
@@ -116,12 +120,12 @@ class RoadnameDataframe(object):
             +---------------------------------------+
         """
 
-        self._df = self._df \
-                        .withColumn('idx', where_is_sido(self._df.split)) \
-                        .withColumn('split', cleanse_split(self._df.idx, self._df.split))
-        self._df = self._df.drop('idx')
-        self._df = self._df.withColumn('split', process_roandname(self._df.split))
-        return RoadnameDataframe(self._df)
+        self._df = self._df.withColumn("idx", where_is_sido(self._df.split)).withColumn(
+            "split", cleanse_split(self._df.idx, self._df.split)
+        )
+        self._df = self._df.drop("idx")
+        self._df = self._df.withColumn("split", process_roadname(self._df.split))
+        return RoadnameDataFrame(self._df)
 
     def add_sido(self):
         """
@@ -155,7 +159,7 @@ class RoadnameDataframe(object):
         """
 
         self._df = self._df.withColumn("sido", extract_sido(self._df.split))
-        return RoadnameDataframe(self._df)
+        return RoadnameDataFrame(self._df)
 
     def add_sigungu(self):
         """
@@ -192,7 +196,7 @@ class RoadnameDataframe(object):
         """
 
         self._df = self._df.withColumn("sigungu", extract_sigungu(self._df.split))
-        return RoadnameDataframe(self._df)
+        return RoadnameDataFrame(self._df)
 
     def add_eupmyeon(self):
         """
@@ -226,7 +230,7 @@ class RoadnameDataframe(object):
             +----------------------------------------------+------+-----------+-------+
         """
         self._df = self._df.withColumn("eupmyeon", extract_eupmyeon(self._df.split))
-        return RoadnameDataframe(self._df)
+        return RoadnameDataFrame(self._df)
 
     def add_dong(self):
         """
@@ -261,7 +265,7 @@ class RoadnameDataframe(object):
         """
 
         self._df = self._df.withColumn("dong", extract_dong(self._df.split))
-        return RoadnameDataframe(self._df)
+        return RoadnameDataFrame(self._df)
 
     def add_roadname(self):
         """
@@ -294,7 +298,7 @@ class RoadnameDataframe(object):
             +----------------------------------------------+------+-----------+---------+
         """
         self._df = self._df.withColumn("roadname", extract_roadname(self._df.split))
-        return RoadnameDataframe(self._df)
+        return RoadnameDataFrame(self._df)
 
     def add_building_primary_number(self):
         """
@@ -333,9 +337,12 @@ class RoadnameDataframe(object):
             |[경기도, 안산시, 상록구, 양달말길, 93-7]             |경기도  |안산시 상록구 |양달말길    |93                     |
             +----------------------------------------------+------+-----------+---------+-----------------------+
         """
-        self._df = self._df.withColumn("building_primary_number", extract_building_primary_number(self._df.split, self._df.roadname))
-        return RoadnameDataframe(self._df)
-    
+        self._df = self._df.withColumn(
+            "building_primary_number",
+            extract_building_primary_number(self._df.split, self._df.roadname),
+        )
+        return RoadnameDataFrame(self._df)
+
     def join_with_db(self, db_df):
         """
         데이터베이스 데이터프레임과 조인하는 함수입니다.
@@ -365,20 +372,22 @@ class RoadnameDataframe(object):
         |[경기도, 안산시, 상록구, 양달말길, 93-7]             |경기도  |안산시 상록구 |양달말길    |93                     |4128101100     |
         +----------------------------------------------+------+-----------+---------+-----------------------+---------------+
         """
-        tmp_db_df = db_df.select( \
-                    col("sido").alias("db_sido"), \
-                    col("sigungu").alias("db_sigungu"), \
-                    col("eupmyeondong").alias("db_eupmyeondong"), \
-                    col("roadname").alias("db_roadname"), \
-                    col("building_primary_number").alias("db_building_primary_number"), \
-                    col("bupjungdong_code").alias("db_bupjungdong_code") \
-                    ) \
-                    .drop_duplicates(['db_roadname', 'db_building_primary_number'])
+        db_df = db_df.select(
+            col("sido").alias("db_sido"),
+            col("sigungu").alias("db_sigungu"),
+            col("eupmyeondong").alias("db_eupmyeondong"),
+            col("roadname").alias("db_roadname"),
+            col("building_primary_number").alias("db_building_primary_number"),
+            col("bupjungdong_code").alias("db_bupjungdong_code"),
+        ).drop_duplicates(["db_roadname", "db_building_primary_number"])
+        origin_df = self._df
+        join_df = self._df.join(
+            db_df,
+            (self._df.sigungu == db_df.db_sigungu)
+            & (self._df.roadname == db_df.db_roadname)
+            & (self._df.building_primary_number == db_df.db_building_primary_number),
+            "inner",
+        ).withColumnRenamed("db_bupjungdong_code", "bupjungdong_code")
+        self._df = join_df.select(origin_df["*"], "bupjungdong_code")
 
-        tmp_df = self._df.join(tmp_db_df, (self._df.sigungu == tmp_db_df.db_sigungu) & (self._df.roadname == tmp_db_df.db_roadname) & (self._df.building_primary_number == tmp_db_df.db_building_primary_number), 'inner')
-        tmp_df = tmp_df.withColumnRenamed("db_bupjungdong_code", "bupjungdong_code")
-        self._df = tmp_df.select(self._tmp_df['*'], "bupjungdong_code")
-        del self._tmp_df
-        del tmp_df
-
-        return RoadnameDataframe(self._df)
+        return RoadnameDataFrame(self._df)
