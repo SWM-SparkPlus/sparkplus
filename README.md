@@ -32,6 +32,12 @@ coord_df = CoordDataFrame(source_df, geo_df, table_df, x_colname, y_colname)
 ```
 roadname_df = RoadnameDataFrame(source_df)
 ```
+ |target                                  |sido  |sigungu    |roadname |building_primary_number|bupjungdong_code|
+ |----------------------------------------|------|-----------|---------|-----------------------|----------------|
+ |경기도 안산시 단원구 해봉로 137                |경기도 |안산시 단원구 |해봉로      |137                    |4128112400     |
+ |경기도 수원시 장안구 경수대로 1079             |경기도  |수원시 장안구 |경수대로    |1079                   |4128111800     |
+ |경기도 안산시 상록구 양달말길 93-7             |경기도  |안산시 상록구 |양달말길    |93                     |4128101100     |
+       
 ### NumAddrDataFrame
 ```
 numaddr_df = NumaddrDataFrame(source_df)
