@@ -49,7 +49,7 @@ roadname_df = RoadnameDataFrame(source_df)
 ### NumAddrDataFrame
 지번 주소를 포함하는 데이터프레임을 주소체계 데이터베이스와 연동하여 시도, 시군구, 읍면동, 법정리, 도로명, 지하여부, 건물 본번, 법정동 코드, 도로명주소(전체) 등의 컬럼을 추가합니다.
 ```
-numaddr_df = NumaddrDataFrame(source_df)
+numaddr_df = NumAddrDataFrame(source_df)
 ```
 
 
