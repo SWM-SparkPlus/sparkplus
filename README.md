@@ -8,11 +8,14 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
 ![](https://github.com/SWM-SparkPlus/kr-address-db-updater/blob/master/statics/sparkplus_architecture.png)
 
 ## Setup
+
+
+[개발자 가이드 참고](https://github.com/SWM-SparkPlus/sparkplus/wiki)
+
 - Spark+는 PyPI에 배포되어 있으며, 다음 커맨드로 설치할 수 있습니다.
 ```
 $ pip install sparkplus
 ```
-[개발자 가이드 참고](https://github.com/SWM-SparkPlus/sparkplus/wiki)
 
 - 설치 후에 import하여 사용할 수 있습니다.
 ```
