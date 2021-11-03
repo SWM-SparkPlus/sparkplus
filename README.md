@@ -8,14 +8,32 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
 ![](https://github.com/SWM-SparkPlus/kr-address-db-updater/blob/master/statics/sparkplus_architecture.png)
 
 ## Setup
-Spark+는 Pypi에 배포되어 있으며, 다음 커맨드로 설치할 수 있습니다.
+- Spark+는 PyPI에 배포되어 있으며, 다음 커맨드로 설치할 수 있습니다.
 ```
-pip install sparkplus
+$ pip install sparkplus
 ```
-[개발자 가이드 ](https://github.com/SWM-SparkPlus/sparkplus/wiki)
+
+- 설치 후에 import하여 사용할 수 있습니다.
+```
+from sparkplus.core import CoordDataFrame, RoadnameDataFrame, NumAddrDataFrame
+```
+
+[개발자 가이드 참고](https://github.com/SWM-SparkPlus/sparkplus/wiki)
 
 ## Class
-### RoadnameDataframe
+
+### CoordDataFrame
+```
+coord_df = CoordDataFrame(source_df, geo_df, table_df, x_colname, y_colname)
+```
+### RoadnameDataFrame
+```
+roadname_df = RoadnameDataFrame(source_df)
+```
+### NumAddrDataFrame
+```
+numaddr_df = NumaddrDataFrame(source_df)
+```
 
 
 ## LICENSE
