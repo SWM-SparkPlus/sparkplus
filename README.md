@@ -12,13 +12,12 @@ Spark+는 Apache Spark와 MySQL을 지원합니다.
 ```
 $ pip install sparkplus
 ```
+[개발자 가이드 참고](https://github.com/SWM-SparkPlus/sparkplus/wiki)
 
 - 설치 후에 import하여 사용할 수 있습니다.
 ```
 from sparkplus.core import CoordDataFrame, RoadnameDataFrame, NumAddrDataFrame
 ```
-
-[개발자 가이드 참고](https://github.com/SWM-SparkPlus/sparkplus/wiki)
 
 ## Class
 
