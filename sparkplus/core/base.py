@@ -9,7 +9,6 @@ class SPDataFrame(object):
     `SPDataFrame` 은 Spark DataFrame를 확장하며, 한국 주소체계를 더 쉽게 다룰 수 있도록 다양한 기능을 제공합니다.
     """
 
-    # TODO: tablenames를 List[ESido] 또는 테이블명을 가진 List 형태로 변경
     @classmethod
     def get_db_df_by_tablenames(
         cls, sparkSession: SparkSession, tablenames: Union[str, List[str]], **kwargs
