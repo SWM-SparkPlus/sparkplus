@@ -6,27 +6,28 @@ from pyspark.sql import DataFrame
 from pyspark.sql.functions import split, col
 from sparkplus.core.udfs import *
 
-class NumAddrDataframe(object):
+class NumAddrDataFrame(object):
     """
     도로명 주소를 활용하여 데이터를 분석하기 위한 클래스입니다
     """
     def __init__(self, dataFrame: DataFrame):
         self._df = dataFrame
         self._tmp_df = dataFrame
+        self.col_list = dataFrame.columns
 
-    def roadname_bupjungdong_code(self, target: str, db_df:DataFrame):
+    def to_bupjungdong(self, target: str, db_df:DataFrame):
         """
         도로명을 지번으로 변경하는 전 과정을 포함하는 함수입니다
         """
         self.add_split(target)
         self.add_sido()
         self.add_sigungu()
-        self.add_eupmyeon()
-        self.add_dong()
-        self.add_roadname()
-        self.add_building_primary_number()
+        self.add_eupmyeondong()
+        self.add_jibun_primary()
+        self.add_jibun_secondary()
         self.join_with_db(db_df)
-        return NumAddrDataframe(self._df)
+        # self.join_with_db(db_df)
+        return self._df
 
     def add_split(self, target: str):
         """
@@ -60,7 +61,7 @@ class NumAddrDataframe(object):
         +-----------------------------+------------------------------------+
         """
         self._df = self._df.withColumn('split', split(self._df[target], ' '))
-        return RoadnameDataframe(self._df)
+        return self._df
 
     def cleanse_split_column(self):
         """
@@ -120,8 +121,8 @@ class NumAddrDataframe(object):
                         .withColumn('idx', where_is_sido(self._df.split)) \
                         .withColumn('split', cleanse_split(self._df.idx, self._df.split))
         self._df = self._df.drop('idx')
-        self._df = self._df.withColumn('split', process_roandname(self._df.split))
-        return RoadnameDataframe(self._df)
+        self._df = self._df.withColumn('split', process_numaddr(self._df.split))
+        return self._df
 
     def add_sido(self):
         """
@@ -155,7 +156,8 @@ class NumAddrDataframe(object):
         """
 
         self._df = self._df.withColumn("sido", extract_sido(self._df.split))
-        return RoadnameDataframe(self._df)
+        self._df.show()
+        return self._df
 
     def add_sigungu(self):
         """
@@ -192,9 +194,10 @@ class NumAddrDataframe(object):
         """
 
         self._df = self._df.withColumn("sigungu", extract_sigungu(self._df.split))
-        return RoadnameDataframe(self._df)
+        self._df.show()
+        return self._df
 
-    def add_eupmyeon(self):
+    def add_eupmyeondong(self):
         """
         읍, 면 컬럼을 기존에 데이터프레임에 추가하는 함수입니다.
 
@@ -225,117 +228,20 @@ class NumAddrDataframe(object):
             |[경상남도, 사천시, 곤양면, 경충로, 23-1]              |경상남도|사천시      |곤양면   |
             +----------------------------------------------+------+-----------+-------+
         """
-        self._df = self._df.withColumn("eupmyeon", extract_eupmyeon(self._df.split))
-        return RoadnameDataframe(self._df)
+        self._df = self._df.withColumn("eupmyeondong", extract_eupmyeondong(self._df.split))
+        self._df.show()
+        return self._df
 
-    def add_dong(self):
-        """
-        데이터프레임에 동이 포함되어있는지 확인하고 동 컬럼을 추가하는 함수입니다.
+    def add_jibun_primary(self):
+        self._df = self._df.withColumn("jibun_primary_number", extract_jibun_primary(self._df.split))
+        self._df.show()
+        return self._df
 
-        UDF
-        ---
-        extract_dong : StringType
-            split 컬럼에서 읍이나 면을 찾고 값을 반환합니다.
-
-            값이 없는 경우, "None" : str 을 반환합니다.
-
-            Exmaple
-            -------
-            >>> df.show()
-            +-------------------------+--------+-----------+
-            |split                    |sido    |sigungu    |
-            +-------------------------+--------+-----------+
-            |[경기도, 성남시, 분당구, 금곡동]|경기도   |성남시       |
-            |[충청남도, 공주시, 검상동]     |강원도   |공주시       |
-            |[대전광역시, 동구, 가오동]     |대전광역시|동구         |
-            +-------------------------+--------+-----------+
-
-            >>> df.withColumn('idx', extract_dong()).show()
-            +-------------------------+--------+-----------+----+
-            |split                    |sido    |sigungu    |dong|
-            +-------------------------+--------+-----------+----+
-            |[경기도, 성남시, 분당구, 금곡동]|경기도   |성남시       |금곡동|
-            |[충청남도, 공주시, 검상동]     |강원도   |공주시       |검상동|
-            |[대전광역시, 동구, 가오동]     |대전광역시|동구         |가오동|
-            +-------------------------+--------+-----------+-----+
-        """
-
-        self._df = self._df.withColumn("dong", extract_dong(self._df.split))
-        return RoadnameDataframe(self._df)
-
-    def add_roadname(self):
-        """
-        데이터프레임에 도로명주소 컬럼을 추가하는 함수입니다.
-        UDF
-        ---
-        extract_building_primary_number : StringType
-            split 컬럼에서 도로명를 찾고 값을 반환합니다.
-
-            값이 없는 경우, "None" : str 을 반환합니다.
-
-            Exmaple
-            -------
-            >>> df.show()
-            +----------------------------------------------+------+-----------+
-            |split                                         |sido  |sigungu    |
-            +----------------------------------------------+------+-----------+
-            |[경기도, 안산시, 단원구, 해봉로, 137]                |경기도 |안산시 단원구 |
-            |[경기도, 수원시, 장안구, 경수대로, 1079]             |경기도  |수원시 장안구 |
-            |[경기도, 안산시, 상록구, 양달말길, 93-7]             |경기도  |안산시 상록구 |
-            +----------------------------------------------+------+-----------+
-
-            >>> df.withColumn('idx', add_sigungu()).show()
-            +----------------------------------------------+------+-----------+---------+
-            |split                                         |sido  |sigungu    |roadname |
-            +----------------------------------------------+------+-----------+---------+
-            |[경기도, 안산시, 단원구, 해봉로, 137]                |경기도 |안산시 단원구 |해봉로     |
-            |[경기도, 수원시, 장안구, 경수대로, 1079]             |경기도  |수원시 장안구 |경수대로   |
-            |[경기도, 안산시, 상록구, 양달말길, 93-7]             |경기도  |안산시 상록구 |양달말길   |
-            +----------------------------------------------+------+-----------+---------+
-        """
-        self._df = self._df.withColumn("roadname", extract_roadname(self._df.split))
-        return RoadnameDataframe(self._df)
-
-    def add_building_primary_number(self):
-        """
-        데이터프레임에 도로명주소의 건물본번을 추가하는 함수입니다.
-
-        UDF
-        ---
-        extract_building_primary_number : StringType
-
-            Parameters
-            ----------
-            split : columnType
-            roadname : columnType
-
-            roadname 뒤에 건물 본번과 부번이 들어오면 건물 본번을 반환합니다..
-
-            값이 없는 경우, "None" : str 을 반환합니다.
-
-            Exmaple
-            -------
-            >>> df.show()
-            +----------------------------------------------+------+-----------+---------+
-            |split                                         |sido  |sigungu    |roadname |
-            +----------------------------------------------+------+-----------+---------+
-            |[경기도, 안산시, 단원구, 해봉로, 137]                |경기도 |안산시 단원구 |해봉로     |
-            |[경기도, 수원시, 장안구, 경수대로, 1079]             |경기도  |수원시 장안구 |경수대로   |
-            |[경기도, 안산시, 상록구, 양달말길, 93-7]             |경기도  |안산시 상록구 |양달말길   |
-            +----------------------------------------------+------+-----------+---------+
-
-            >>> df.withColumn('idx', extract_building_primary_number()).show()
-            +----------------------------------------------+------+-----------+---------+-----------------------+
-            |split                                         |sido  |sigungu    |roadname |building_primary_number|
-            +----------------------------------------------+------+-----------+---------+-----------------------+
-            |[경기도, 안산시, 단원구, 해봉로, 137]                |경기도 |안산시 단원구 |해봉로      |137                    |
-            |[경기도, 수원시, 장안구, 경수대로, 1079]             |경기도  |수원시 장안구 |경수대로    |1079                   |
-            |[경기도, 안산시, 상록구, 양달말길, 93-7]             |경기도  |안산시 상록구 |양달말길    |93                     |
-            +----------------------------------------------+------+-----------+---------+-----------------------+
-        """
-        self._df = self._df.withColumn("building_primary_number", extract_building_primary_number(self._df.split, self._df.roadname))
-        return RoadnameDataframe(self._df)
-    
+    def add_jibun_secondary(self):
+        self._df = self._df.withColumn("jibun_secondary_number", extract_jibun_secondary(self._df.split))
+        self._df.show()
+        return self._df
+        
     def join_with_db(self, db_df):
         """
         데이터베이스 데이터프레임과 조인하는 함수입니다.
@@ -370,15 +276,17 @@ class NumAddrDataframe(object):
                     col("sigungu").alias("db_sigungu"), \
                     col("eupmyeondong").alias("db_eupmyeondong"), \
                     col("roadname").alias("db_roadname"), \
-                    col("building_primary_number").alias("db_building_primary_number"), \
+                    col("jibun_primary_number").alias("db_jibun_primary_number"), \
+                    col("jibun_secondary_number").alias("db_jibun_secondary_number"), \
                     col("bupjungdong_code").alias("db_bupjungdong_code") \
                     ) \
-                    .drop_duplicates(['db_roadname', 'db_building_primary_number'])
-
-        tmp_df = self._df.join(tmp_db_df, (self._df.sigungu == tmp_db_df.db_sigungu) & (self._df.roadname == tmp_db_df.db_roadname) & (self._df.building_primary_number == tmp_db_df.db_building_primary_number), 'inner')
+                    #.drop_duplicates(['db_roadname', 'db_building_primary_number'])
+        tmp_df = self._df.join(tmp_db_df, (self._df.sigungu == tmp_db_df.db_sigungu) & (self._df.eupmyeondong == tmp_db_df.db_eupmyeondong) & (self._df.jibun_primary_number == tmp_db_df.db_jibun_primary_number) & (self._df.jibun_secondary_number == tmp_db_df.db_jibun_secondary_number), 'inner')
         tmp_df = tmp_df.withColumnRenamed("db_bupjungdong_code", "bupjungdong_code")
-        self._df = tmp_df.select(self._tmp_df['*'], "bupjungdong_code")
+        self._df = tmp_df.select(self._df['*'], "bupjungdong_code")
         del self._tmp_df
         del tmp_df
 
-        return RoadnameDataframe(self._df)
+        return self._df
+
+        

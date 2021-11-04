@@ -71,10 +71,25 @@ def process_roadname(split):
                     return split[:i] + result_li + split[i + 1 :]
     return split
 
+@udf(ArrayType(StringType()))
+def process_numaddr(split):
+    if split is None:
+        return "None"
+
+    data = split[2]
+    return data
+
+
 
 @udf(StringType())
 def extract_sido(split):
+
+    if split is None:
+        return "None"
+
     for data in split:
+        if data =='':
+            continue
         if sido_dictionary.get(data):
             return sido_dictionary[data]
         elif sido_reverse_dictionary.get(data):
@@ -84,9 +99,15 @@ def extract_sido(split):
 
 @udf(StringType())
 def extract_sigungu(split):
+
+    if split is None:
+        return "None"
+
     result = str()
     flag = False
     for data in split:
+        if data =='':
+            continue
         if not sido_reverse_dictionary.get(data):
             sigungu = data[-1]
             if (sigungu == "시") or (sigungu == "군") or (sigungu == "구"):
@@ -102,15 +123,30 @@ def extract_sigungu(split):
 
 @udf(StringType())
 def extract_eupmyeon(split):
+    if split is None:
+        return "None"
+
     for data in split:
+        if data == "":
+            continue
         if data[-1] == "읍" or data[-1] == "면":
             return data
     return "None"
 
+@udf(StringType())
+def extract_eupmyeondong(split):
+    if split is None:
+        return "None"
+    return split[2]
+
 
 @udf(StringType())
 def extract_dong(split):
+    if split is None:
+        return "None"
     for data in split:
+        if data == "":
+            continue
         if data[-1] == "동" and not data[0].isdigit():
             return data
     return "None"
@@ -118,7 +154,11 @@ def extract_dong(split):
 
 @udf(StringType())
 def extract_roadname(split):
+    if split is None:
+        return "None"
     for data in split:
+        if data == "":
+            continue
         if data[-1] == "로" or data[-1] == "길":
             return data
     return "None"
@@ -126,6 +166,8 @@ def extract_roadname(split):
 
 @udf(StringType())
 def extract_building_primary_number(split, roadname):
+    if split is None:
+        return "None"
     for i in range(len(split)):
         if split[i - 1] == roadname:
             data = split[i]
@@ -136,3 +178,21 @@ def extract_building_primary_number(split, roadname):
                     if data[j] == "-":
                         return data[:j]
     return "None"
+
+@udf(StringType())
+def extract_jibun_primary(split):
+    if split is None:
+        return "None"
+    data = split[3]
+    for i in range(len(data)):
+        if data[i] == "-":
+            return data[:i]
+
+@udf(StringType())
+def extract_jibun_secondary(split):
+    if split is None:
+        return "None"
+    data = split[3]
+    for i in range(len(data)):
+        if data[i] == "-":
+            return data[i+1:]

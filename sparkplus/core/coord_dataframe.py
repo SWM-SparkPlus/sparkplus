@@ -12,7 +12,7 @@ def create_sjoin_pnu(gdf, join_column_name):
         gdf_temp = gpd.GeoDataFrame(
             data=[[x] for x in range(len(x))], geometry=gpd.points_from_xy(x, y)
         ).set_crs(epsg=4326, inplace=True)
-        settlement = gpd.sjoin(gdf_temp, gdf, how="left", op="within")
+        settlement = gpd.sjoin(gdf_temp, gdf, how="left", predicate="within")
         settlement = settlement.drop_duplicates(subset="geometry")
 
         return (
@@ -57,27 +57,10 @@ def get_fullname(a, b, c, d):
         c = ""
     if d == None:
         d = ""
-    res = str(a) + " " + str(b) + " " + str(c) + " " + str(d)
+
+    res = str(a) + " " + str(b) + " " + str(c) + " " + str(d) + " " 
 
     return res
-
-
-@udf(StringType())
-def get_fullname(a, b, c, d):
-	if a == None and b == None and c == None and d == None:
-		return None 
-
-	if a == None:
-		a = ''
-	if b == None:
-		b = ''
-	if c == None:
-		c = ''
-	if d == None:
-		d = ''
-	res = str(a) + ' ' + str(b) + ' ' + str(c) + ' ' + str(d)
-
-	return res
 
 class CoordDataFrame(DataFrame):
     """
@@ -108,7 +91,7 @@ class CoordDataFrame(DataFrame):
         self.pnu_df = _coord_to_pnu(origin_sdf, gdf, x_colname, y_colname).cache()
         self.joined_df = _join_with_table(tdf, self.pnu_df).cache()
 
-    def coord_to_h3(self, h3_level):
+    def add_h3(self, h3_level):
         """
         Summary
         -------
@@ -158,7 +141,7 @@ class CoordDataFrame(DataFrame):
         )
         return res_h3
 
-    def coord_to_pnu(self):
+    def add_pnu(self):
         """
         Summary
         -------
@@ -194,7 +177,7 @@ class CoordDataFrame(DataFrame):
         """
         return self.pnu_df
 
-    def coord_to_zipcode(self):
+    def add_zipcode(self):
         """
         Summary
         -------
@@ -234,7 +217,7 @@ class CoordDataFrame(DataFrame):
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
         return res_df
 
-    def coord_to_emd(self):
+    def add_bupjungdong(self):
         """
         Summary
         -------
@@ -273,7 +256,7 @@ class CoordDataFrame(DataFrame):
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
         return res_df
 
-    def coord_to_roadname(self):
+    def add_roadname(self):
         """
         Summary
         -------
@@ -323,7 +306,7 @@ class CoordDataFrame(DataFrame):
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
         return res_df
 
-    def coord_to_roadname_addr(self):
+    def add_roadname_addr(self):
         """
         Summary
         -------
@@ -382,7 +365,7 @@ class CoordDataFrame(DataFrame):
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
         return res_df
 
-    def coord_to_jibun(self):
+    def add_jibun(self):
         """
         Summary
         -------
@@ -429,7 +412,7 @@ class CoordDataFrame(DataFrame):
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
         return res_df
 
-    def join_with_table(self):
+    def join_with_db(self):
         """
         Summary
         -------
