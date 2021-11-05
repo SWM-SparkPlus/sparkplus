@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="sparkplus",
-    version="0.9.0",
+    version="1.0.0",
     description="GIS package for sparkplus",
     author="sparkplus",
     author_email="meadea27@gmail.com",

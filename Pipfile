@@ -13,6 +13,7 @@ geospark = "*"
 h3 = "*"
 geopy = "*"
 folium = "*"
+python-dotenv = "*"
 
 [dev-packages]
 
