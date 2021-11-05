@@ -8,6 +8,7 @@ sys.path.append(
 from pyspark.sql import DataFrame
 from pyspark.sql.functions import split, col, lit
 from sparkplus.core.udfs import *
+from pyspark.sql.functions import when
 
 
 class RoadnameDataFrame(object):
@@ -31,6 +32,9 @@ class RoadnameDataFrame(object):
         self.add_dong()
         self.add_roadname()
         self.add_building_primary_number()
+        self.add_jibun_primary_number()
+        self._df.show()
+        print(self._df.count())
         self.join_with_db(db_df)
         return self._df
 
@@ -231,7 +235,7 @@ class RoadnameDataFrame(object):
             |[경상남도, 사천시, 곤양면, 경충로, 23-1]              |경상남도|사천시      |곤양면   |
             +----------------------------------------------+------+-----------+-------+
         """
-        self._df = self._df.withColumn("eupmyeondong", extract_eupmyeon(self._df.split))
+        self._df = self._df.withColumn("eupmyeondong", extract_eupmyeondong(self._df.split))
         return self._df
 
     def add_dong(self):
@@ -344,6 +348,13 @@ class RoadnameDataFrame(object):
             extract_building_primary_number(self._df.split, self._df.roadname),
         )
         return self._df
+    
+    def add_jibun_primary_number(self):
+        self._df = self._df.withColumn(
+            "jibun_primary_number",
+            extract_jibun_primary_number(self._df.split, self._df.roadname),
+        )
+        return self._df
 
     def join_with_db(self, db_df):
         """
@@ -377,19 +388,36 @@ class RoadnameDataFrame(object):
         db_df = db_df.select(
             col("sido").alias("db_sido"),
             col("sigungu").alias("db_sigungu"),
-            col("eupmyeondong").alias("db_eupmyeondong"),
+            col("eupmyeondong").alias('db_eupmyeondong'),
             col("roadname").alias("db_roadname"),
             col("building_primary_number").alias("db_building_primary_number"),
-            col("bupjungdong_code").alias("db_bupjungdong_code"),
+            col("bupjungdong_code").alias('db_bupjungdong_code'),
+            col("jibun_primary_number").alias("db_jibun_primary_number")
         ).drop_duplicates(["db_roadname", "db_building_primary_number"])
         # origin_df = self.tmp_df
-        join_df = self._df.join(
-            db_df,
+        cond = when(self._df.roadname == "None", 
+            (self._df.sigungu == db_df.db_sigungu) 
+            & (self._df.jibun_primary_number == db_df.db_jibun_primary_number)
+            & (self._df.eupmyeondong == db_df.db_eupmyeondong)
+            ).otherwise(
             (self._df.sigungu == db_df.db_sigungu)
-            & (self._df.roadname == db_df.db_roadname)
-            & (self._df.building_primary_number == db_df.db_building_primary_number),
+            & ((self._df.roadname == db_df.db_roadname)
+            & (self._df.building_primary_number == db_df.db_building_primary_number))
+            )   
+        join_df = self._df.join(
+            db_df,  
+            cond,
+            # (self._df.sigungu == db_df.db_sigungu)
+            # & ((self._df.roadname == db_df.db_roadname)
+            # & (self._df.building_primary_number == db_df.db_building_primary_number))
+            # | (self._df.jibun_primary_number == db_df.db_jibun_primary_number)
+            # & (self._df.eupmyeondong == db_df.db_eupmyeondong),
             "inner",
-        ).withColumnRenamed("db_bupjungdong_code", "bupjungdong_code")
-        self._df = join_df.select(self._df['*'], "bupjungdong_code")
+        ) \
+         .withColumnRenamed("db_bupjungdong_code", "bupjungdong_code") 
+         # .withColumnRenamed("db_sido", "sido") \
+         # .withColumnRenamed("db_sigungu", "sigungu") \
+         # .withColumnRenamed("db_eupmyeondong", "eupmyeondong")
+        self._df = join_df.select(self._df['*'], "db_sido", "db_sigungu", "db_eupmyeondong", "bupjungdong_code")
 
         return self._df
