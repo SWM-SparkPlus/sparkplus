@@ -389,7 +389,7 @@ class RoadnameDataFrame(object):
             & (self._df.roadname == db_df.db_roadname)
             & (self._df.building_primary_number == db_df.db_building_primary_number),
             "inner",
-        ).withColumnRenamed("db_bupjungdong_code", "bupjungdong_code")
-        self._df = join_df.select(self._df['*'], "bupjungdong_code")
+        ).withColumnRenamed("db_bupjungdong_code", "bupjungdong_code") 
+        self._df = join_df.select(*self.col_list, "db_sido", "db_sigungu", "db_eupmyeondong", "bupjungdong_code")
 
         return self._df
