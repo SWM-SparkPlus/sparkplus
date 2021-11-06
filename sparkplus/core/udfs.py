@@ -137,7 +137,14 @@ def extract_eupmyeon(split):
 def extract_eupmyeondong(split):
     if split is None:
         return "None"
-    return split[2]
+
+    for data in split:
+        if data == "":
+            continue
+        if data[-1] == "읍" or  data[-1] == "면" or data[-1] == "동" or data[-1] == "가" and not data[0].isdigit():
+            return data
+
+    return "None"
 
 
 @udf(StringType())
@@ -180,13 +187,18 @@ def extract_building_primary_number(split, roadname):
     return "None"
 
 @udf(StringType())
-def extract_jibun_primary(split):
+def extract_jibun_primary_number(split, roadname):
     if split is None:
         return "None"
-    data = split[3]
-    for i in range(len(data)):
-        if data[i] == "-":
-            return data[:i]
+    if roadname not in split:
+        data = split[-1]
+        if data.isdigit():
+            return data
+        elif "-" in data:
+            for j in range(len(data)):
+                if data[j] == "-":
+                    return data[:j]
+    return "None"
 
 @udf(StringType())
 def extract_jibun_secondary(split):
