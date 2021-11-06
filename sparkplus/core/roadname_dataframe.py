@@ -33,8 +33,6 @@ class RoadnameDataFrame(object):
         self.add_roadname()
         self.add_building_primary_number()
         self.add_jibun_primary_number()
-        self._df.show()
-        print(self._df.count())
         self.join_with_db(db_df)
         return self._df
 
@@ -357,6 +355,8 @@ class RoadnameDataFrame(object):
         return self._df
 
     def join_with_db(self, db_df):
+
+        # my_df_count = self._df.count()
         """
         데이터베이스 데이터프레임과 조인하는 함수입니다.
 
@@ -385,7 +385,7 @@ class RoadnameDataFrame(object):
         |[경기도, 안산시, 상록구, 양달말길, 93-7]             |경기도  |안산시 상록구 |양달말길    |93                     |4128101100     |
         +----------------------------------------------+------+-----------+---------+-----------------------+---------------+
         """
-        db_df = db_df.select(
+        db_df_roadname = db_df.select(
             col("sido").alias("db_sido"),
             col("sigungu").alias("db_sigungu"),
             col("eupmyeondong").alias('db_eupmyeondong'),
@@ -393,8 +393,19 @@ class RoadnameDataFrame(object):
             col("building_primary_number").alias("db_building_primary_number"),
             col("bupjungdong_code").alias('db_bupjungdong_code'),
             col("jibun_primary_number").alias("db_jibun_primary_number")
-        ).drop_duplicates(["db_roadname", "db_building_primary_number"])
-        # origin_df = self.tmp_df
+        ).drop_duplicates(["db_sigungu", "db_roadname", "db_building_primary_number"])
+
+        db_df_jibun = db_df.select(
+            col("sido").alias("db_sido"),
+            col("sigungu").alias("db_sigungu"),
+            col("eupmyeondong").alias('db_eupmyeondong'),
+            col("roadname").alias("db_roadname"),
+            col("building_primary_number").alias("db_building_primary_number"),
+            col("bupjungdong_code").alias('db_bupjungdong_code'),
+            col("jibun_primary_number").alias("db_jibun_primary_number")
+        ).drop_duplicates(["db_sigungu", "db_eupmyeondong", "db_jibun_primary_number"])
+
+        """
         cond = when(self._df.roadname == "None", 
             (self._df.sigungu == db_df.db_sigungu) 
             & (self._df.jibun_primary_number == db_df.db_jibun_primary_number)
@@ -403,21 +414,87 @@ class RoadnameDataFrame(object):
             (self._df.sigungu == db_df.db_sigungu)
             & ((self._df.roadname == db_df.db_roadname)
             & (self._df.building_primary_number == db_df.db_building_primary_number))
-            )   
-        join_df = self._df.join(
-            db_df,  
-            cond,
-            # (self._df.sigungu == db_df.db_sigungu)
-            # & ((self._df.roadname == db_df.db_roadname)
-            # & (self._df.building_primary_number == db_df.db_building_primary_number))
+            )
+        """  
+        jibun_origin = self._df.where(self._df.roadname == "None")
+        roadname_origin = self._df.where(self._df.roadname != "None")
+
+        join_df_roadname = roadname_origin.join(
+            db_df_roadname,  
+            (self._df.sigungu == db_df_roadname.db_sigungu)
+            & (self._df.roadname == db_df_roadname.db_roadname)
+            & (self._df.building_primary_number == db_df_roadname.db_building_primary_number),
             # | (self._df.jibun_primary_number == db_df.db_jibun_primary_number)
             # & (self._df.eupmyeondong == db_df.db_eupmyeondong),
             "inner",
         ) \
-         .withColumnRenamed("db_bupjungdong_code", "bupjungdong_code") 
+         .withColumnRenamed("db_bupjungdong_code", "bupjungdong_code") \
+         .select(*self.col_list, "db_sido", "db_sigungu", "db_eupmyeondong", "bupjungdong_code")
+
+        
+        join_df_jibun = jibun_origin.join(
+            db_df_jibun,
+            (self._df.sigungu == db_df_jibun.db_sigungu)
+            & (self._df.eupmyeondong == db_df_jibun.db_eupmyeondong)
+            & (self._df.jibun_primary_number == db_df_jibun.db_jibun_primary_number),
+            "inner",
+        ) \
+        .withColumnRenamed("db_bupjungdong_code", "bupjungdong_code") \
+        .select(*self.col_list, "db_sido", "db_sigungu", "db_eupmyeondong", "bupjungdong_code")
          # .withColumnRenamed("db_sido", "sido") \
          # .withColumnRenamed("db_sigungu", "sigungu") \
          # .withColumnRenamed("db_eupmyeondong", "eupmyeondong")
-        self._df = join_df.select(self._df['*'], "db_sido", "db_sigungu", "db_eupmyeondong", "bupjungdong_code")
+        """
+        diff_df_jibun = jibun_origin.join(
+            join_df_jibun,
+            (jibun_origin.순번 == join_df_jibun.순번),
+            "left_anti"
+        )
+
+        print('diff_df', diff_df_jibun.count())
+        diff_df_jibun.show()
+
+        diff_df_roadname = roadname_origin.join(
+            join_df_roadname,
+            (roadname_origin.순번 == join_df_roadname.순번),
+            "left_anti"
+        )
+
+        diff_df_jibun2 = join_df_jibun.join(
+            jibun_origin,
+            (jibun_origin.순번 == join_df_jibun.순번),
+            "left_anti"
+        )
+
+        print('diff_df2', diff_df_jibun2.count())
+        diff_df_jibun.show()
+
+        diff_df_roadname2 = join_df_roadname.join(
+            roadname_origin,
+            (roadname_origin.순번 == join_df_roadname.순번),
+            "left_anti"
+        )
+
+
+        print('diff_df_roadname2', diff_df_roadname2.count())
+        diff_df_roadname.show()
+
+        join_df_jibun.show()
+        """
+        self._df = join_df_roadname.union(join_df_jibun)
+
+        """
+        res_count = self._df.count()
+        jibun_count = join_df_jibun.count()
+        roadname_count = join_df_roadname.count()
+
+        print("jibun_origin", jibun_origin.count())
+        print("roadname_origin", roadname_origin.count())
+        print("my_df", my_df_count)
+        print("join_roadname", roadname_count)
+        print("join_jibun", jibun_count)
+        print("res_join", res_count)
+        print("diff", my_df_count - res_count)
+        """
 
         return self._df

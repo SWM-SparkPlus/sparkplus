@@ -1,12 +1,9 @@
 # SparkPlus
 Spark+는 H3, 위/경도 좌표 등의 공간 정보를 국내 주소체계(신주소/구주소)와 함께 처리할 수 있도록 지원하는 Package입니다.
 
-## Spark+ 전체 아키텍처
-
-![](https://github.com/SWM-SparkPlus/kr-address-db-updater/blob/master/statics/sparkplus_architecture.png)
-
 ## Setup
 
+[GitHub](https://github.com/SWM-SparkPlus/sparkplus/)
 [개발자 가이드 참고](https://github.com/SWM-SparkPlus/sparkplus/wiki)
 
 - Spark+는 PyPI에 배포되어 있으며, 다음 커맨드로 설치할 수 있습니다.

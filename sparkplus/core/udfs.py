@@ -141,7 +141,7 @@ def extract_eupmyeondong(split):
     for data in split:
         if data == "":
             continue
-        if data[-1] == "읍" or  data[-1] == "면" or data[-1] == "동":
+        if data[-1] == "읍" or  data[-1] == "면" or data[-1] == "동" or data[-1] == "가" and not data[0].isdigit():
             return data
 
     return "None"
