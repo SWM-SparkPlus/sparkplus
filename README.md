@@ -1,9 +1,11 @@
 # SparkPlus
 Spark+는 H3, 위/경도 좌표 등의 공간 정보를 국내 주소체계(신주소/구주소)와 함께 처리할 수 있도록 지원하는 Package입니다.
 
-## Spark+ 전체 아키텍처
+## Spark+ 아키텍처
 
 ![](https://github.com/SWM-SparkPlus/sparkplus/blob/master/static/sparkplus_arch_finale.png)
+
+[RDW Reference Architecture](https://github.com/SWM-SparkPlus/rdw-reference-architecture)
 
 ## Setup
 
