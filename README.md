@@ -35,7 +35,7 @@ coord_df = CoordDataFrame(source_df, geo_df, table_df, x_colname, y_colname)
 ### AddressDataFrame
 비정형 도로명주소 또는 지번주소를 포함하는 데이터프레임을 주소체계 데이터베이스와 연동하여 분석 및 시각화할 수 있는 형태의 시도, 시군구, 읍면동,  법정동코드, 시군구코드 등의 컬럼을 추가합니다.
 ```
-roadname_df = AddressDataFrame(source_df).to_bupjungdong("target_colname", table_df)
+roadname_df = AddressDataFrame(target_colname, source_df).to_bupjungdong(table_df)
 ```
 
 |받는분주소| sido_name|sigungu_name|eupmyeondong_name|bupjungdong_code|sigungu_code|
