@@ -6,7 +6,7 @@ long_description = (this_directory / "PyPI_README.md").read_text()
 
 setup(
     name="sparkplus",
-    version="1.2.1",
+    version="1.3.0",
     description="GIS package for Apache Spark",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -31,7 +31,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     packages=find_packages(),
-    keywords=["spark", "geo"],
+    keywords=["spark", "gis"],
     classifiers=[
         "Programming Language :: Python :: 3",
         "License :: OSI Approved :: MIT License",
