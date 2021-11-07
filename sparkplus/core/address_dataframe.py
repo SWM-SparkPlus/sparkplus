@@ -11,7 +11,7 @@ from sparkplus.core.udfs import *
 from pyspark.sql.functions import when
 
 
-class RoadnameDataFrame(object):
+class AddressDataFrame(object):
     """
     도로명 주소를 활용하여 데이터를 분석하기 위한 클래스입니다
     """
@@ -385,49 +385,51 @@ class RoadnameDataFrame(object):
         +----------------------------------------------+------+-----------+---------+-----------------------+---------------+
         """
         db_df_roadname = db_df.select(
-            col("sido").alias("db_sido"),
-            col("sigungu").alias("db_sigungu"),
-            col("eupmyeondong").alias('db_eupmyeondong'),
+            col("sido").alias("sido_name"),
+            col("sigungu").alias("sigungu_name"),
+            col("eupmyeondong").alias('eupmyeondong_name'),
             col("roadname").alias("db_roadname"),
             col("building_primary_number").alias("db_building_primary_number"),
             col("bupjungdong_code").alias('db_bupjungdong_code'),
             col("jibun_primary_number").alias("db_jibun_primary_number")
-        ).drop_duplicates(["db_sigungu", "db_roadname", "db_building_primary_number"])
+        ).drop_duplicates(["sigungu_name", "db_roadname", "db_building_primary_number"])
 
         db_df_jibun = db_df.select(
-            col("sido").alias("db_sido"),
-            col("sigungu").alias("db_sigungu"),
-            col("eupmyeondong").alias('db_eupmyeondong'),
+            col("sido").alias("sido_name"),
+            col("sigungu").alias("sigungu_name"),
+            col("eupmyeondong").alias('eupmyeondong_name'),
             col("roadname").alias("db_roadname"),
             col("building_primary_number").alias("db_building_primary_number"),
             col("bupjungdong_code").alias('db_bupjungdong_code'),
             col("jibun_primary_number").alias("db_jibun_primary_number")
-        ).drop_duplicates(["db_sigungu", "db_eupmyeondong", "db_jibun_primary_number"])
+        ).drop_duplicates(["sigungu_name", "eupmyeondong_name", "db_jibun_primary_number"])
 
         jibun_origin = self._df.where(self._df.roadname == "None")
         roadname_origin = self._df.where(self._df.roadname != "None")
 
         join_df_roadname = roadname_origin.join(
             db_df_roadname,  
-            (self._df.sigungu == db_df_roadname.db_sigungu)
+            (self._df.sigungu == db_df_roadname.sigungu_name)
             & (self._df.roadname == db_df_roadname.db_roadname)
             & (self._df.building_primary_number == db_df_roadname.db_building_primary_number),
             "inner",
         ) \
          .withColumnRenamed("db_bupjungdong_code", "bupjungdong_code") \
-         .select(*self.col_list, "db_sido", "db_sigungu", "db_eupmyeondong", "bupjungdong_code")
+         .select(*self.col_list, "sido_name", "sigungu_name", "eupmyeondong_name", "bupjungdong_code")
 
         
         join_df_jibun = jibun_origin.join(
             db_df_jibun,
-            (self._df.sigungu == db_df_jibun.db_sigungu)
-            & (self._df.eupmyeondong == db_df_jibun.db_eupmyeondong)
+            (self._df.sigungu == db_df_jibun.sigungu_name)
+            & (self._df.eupmyeondong == db_df_jibun.eupmyeondong_name)
             & (self._df.jibun_primary_number == db_df_jibun.db_jibun_primary_number),
             "inner",
         ) \
         .withColumnRenamed("db_bupjungdong_code", "bupjungdong_code") \
-        .select(*self.col_list, "db_sido", "db_sigungu", "db_eupmyeondong", "bupjungdong_code")
+        .select(*self.col_list, "sido_name", "sigungu_name", "eupmyeondong_name", "bupjungdong_code")
       
         self._df = join_df_roadname.union(join_df_jibun)
+
+        self._df = self._df.withColumn("sigungu_code", extract_sigungu_code(self._df.bupjungdong_code))
 
         return self._df

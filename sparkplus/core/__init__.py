@@ -1,5 +1,5 @@
 from .coord_dataframe import CoordDataFrame
-from .roadname_dataframe import RoadnameDataFrame
+from .address_dataframe import AddressDataFrame
 from .numaddr_dataframe import NumAddrDataFrame
 from .utils import load_tables, load_gdf
 from .tablename import (
@@ -11,7 +11,7 @@ from .tablename import (
 
 __all__ = [
     "CoordDataFrame",
-    "RoadnameDataFrame",
+    "AddressDataFrame",
     "NumAddrDataFrame",
     "load_tables",
     "load_gdf",

@@ -120,7 +120,7 @@ def extract_sigungu(split):
         return result
     return "None"
 
-
+"""
 @udf(StringType())
 def extract_eupmyeon(split):
     if split is None:
@@ -132,6 +132,7 @@ def extract_eupmyeon(split):
         if data[-1] == "읍" or data[-1] == "면":
             return data
     return "None"
+"""
 
 @udf(StringType())
 def extract_eupmyeondong(split):
@@ -208,3 +209,10 @@ def extract_jibun_secondary(split):
     for i in range(len(data)):
         if data[i] == "-":
             return data[i+1:]
+
+@udf(StringType())
+def extract_sigungu_code(bupjungdong_code):
+    if bupjungdong_code is None or bupjungdong_code == "None":
+        return "None"
+    data = bupjungdong_code[:5]
+    return data
