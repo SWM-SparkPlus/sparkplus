@@ -139,7 +139,7 @@ class CoordDataFrame(DataFrame):
                 self._origin_sdf[self._y_colname], self._origin_sdf[self._x_colname]
             ),
         )
-        return res_h3
+        return CoordDataFrame(res_h3)
 
     def add_pnu(self):
         """
@@ -215,7 +215,7 @@ class CoordDataFrame(DataFrame):
         joined_df = self.joined_df.select("PNU", "zipcode")
         res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop("PNU")
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
-        return res_df
+        return CoordDataFrame(res_df)
 
     def add_bupjungdong(self):
         """
@@ -254,7 +254,7 @@ class CoordDataFrame(DataFrame):
         joined_df = self.joined_df.select("PNU", "bupjungdong_code")
         res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop("PNU")
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
-        return res_df
+        return CoordDataFrame(res_df)
 
     def add_roadname(self):
         """
@@ -304,7 +304,7 @@ class CoordDataFrame(DataFrame):
         )
         res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop("PNU")
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
-        return res_df
+        return CoordDataFrame(res_df)
 
     def add_roadname_addr(self):
         """
@@ -363,7 +363,7 @@ class CoordDataFrame(DataFrame):
         )
         res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop("PNU")
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
-        return res_df
+        return CoordDataFrame(res_df)
 
     def add_jibun(self):
         """
@@ -410,7 +410,7 @@ class CoordDataFrame(DataFrame):
         )
         res_df = self.pnu_df.join(joined_df, "PNU", "leftouter").drop("PNU")
         res_df = res_df.dropDuplicates([self._x_colname, self._y_colname])
-        return res_df
+        return CoordDataFrame(res_df)
 
     def join_with_db(self):
         """
